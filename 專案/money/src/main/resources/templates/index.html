@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匯率轉換</title>
+</head>
+<body>
+    <h1>匯率轉換系統</h1>
+    <form action="/exchange-rate" method="get">
+        <label for="fromCurrency">來源幣別:</label>
+        <input type="text" id="fromCurrency" name="fromCurrency" required>
+
+        <label for="toCurrency">目標幣別:</label>
+        <input type="text" id="toCurrency" name="toCurrency" required>
+
+        <button type="submit">查詢匯率</button>
+    </form>
+
+    <h2>查詢結果：</h2>
+    <div id="result"></div>
+</body>
+</html>

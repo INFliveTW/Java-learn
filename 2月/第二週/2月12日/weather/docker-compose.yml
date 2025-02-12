@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: sql-server
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=1QAZ2WSX3EDc4@
+    ports:
+      - "1433:1433"
+    networks:
+      - weather_sql-network
+    volumes:
+      - sql_data:/var/opt/mssql
+    restart: always
+
+networks:
+  weather_sql-network:
+    driver: bridge
+
+volumes:
+  sql_data:
+    driver: local

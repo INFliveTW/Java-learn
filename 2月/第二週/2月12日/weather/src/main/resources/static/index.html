@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天氣查詢系統</title>
+    <script>
+        async function fetchWeather() {
+            const city = document.getElementById("city").value;
+            const response = await fetch(`/api/weather/${city}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById("result").innerHTML = `
+                    <h2>${data.city} 的天氣</h2>
+                    <p>日期: ${data.date}</p>
+                    <p>天氣描述: ${data.weatherDescription}</p>
+                    <p>溫度: ${data.temperature} °C</p>
+                    <p>濕度: ${data.humidity} %</p>
+                    <p>風速: ${data.windSpeed} m/s</p>
+                `;
+            } else {
+                document.getElementById("result").innerHTML = `<p>查無資料，請檢查城市名稱。</p>`;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>天氣查詢系統</h1>
+    <label for="city">輸入城市名稱：</label>
+    <input type="text" id="city" placeholder="如：Taipei" />
+    <button onclick="fetchWeather()">查詢</button>
+
+    <div id="result"></div>
+</body>
+</html>
