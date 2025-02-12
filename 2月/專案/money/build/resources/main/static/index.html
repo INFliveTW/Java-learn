@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匯率換算系統</title>
+    <script>
+        // 當使用者點擊換算按鈕時，這個函數會被觸發
+        function convertCurrency() {
+            var fromCurrency = document.getElementById("fromCurrency").value;
+            var toCurrency = document.getElementById("toCurrency").value;
+            var amount = document.getElementById("amount").value;
+            
+            // 發送請求到後端 API
+            fetch(`/api/exchange/convert?fromCurrency=${fromCurrency}&toCurrency=${toCurrency}&amount=${amount}`)
+                .then(response => response.json())
+                .then(data => {
+                    // 顯示換算結果
+                    document.getElementById("result").innerHTML = `換算後金額: ${data.convertedAmount} ${toCurrency}`;
+                    document.getElementById("rate").innerHTML = `匯率: ${data.rate}`;
+                })
+                .catch(error => {
+                    alert("發生錯誤，請再試一次！");
+                });
+        }
+    </script>
+</head>
+<body>
+    <h1>匯率換算系統</h1>
+    <div>
+        <label for="fromCurrency">來源幣別: </label>
+        <select id="fromCurrency">
+            <option value="USD">USD</option>
+            <option value="TWD">TWD</option>
+            <option value="EUR">EUR</option>
+            <!-- 添加更多幣別 -->
+        </select>
+    </div>
+    
+    <div>
+        <label for="toCurrency">目標幣別: </label>
+        <select id="toCurrency">
+            <option value="TWD">TWD</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <!-- 添加更多幣別 -->
+        </select>
+    </div>
+    
+    <div>
+        <label for="amount">金額: </label>
+        <input type="number" id="amount" />
+    </div>
+
+    <div>
+        <button onclick="convertCurrency()">換算</button>
+    </div>
+
+    <div id="result"></div>
+    <div id="rate"></div>
+</body>
+</html>

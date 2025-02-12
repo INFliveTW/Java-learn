@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MoneyApplication<money>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.money.MoneyApplication",
+            "projectName": "money",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
