@@ -1,0 +1,25 @@
+Spring Boot
+
+@SpringBootApplication：應用入口
+等同 @Configuration 配置能力
+類似傳統 Spring XML 設定檔
+替代 applicationContext.xml
+
+@EnableAutoConfiguration 自動組態能力
+@ComponentScan 組件掃描能力
+
+@Controller:Web(http) 告訴spring boot 要掃描那些packages
+自動發現四種註解的bean
+可指定範圍(不指定掃描當前類所在的 '' 及其子 '')
+
+@Service：處理業務邏輯
+
+@Repository：標記存取曾(DAO,Data Access Object)
+與資料庫交互
+
+
+jar: 普通
+war: web (server (可透過網址連線呼叫api)
+
+spring noot 
+k8s 容器管理平台

@@ -1,0 +1,10 @@
+spring.application.name=shopdb: 設定 Spring Boot 應用的名稱。
+server.port=8080: 設定應用程序的端口，這樣你可以在 http://localhost:8080 訪問你的應用。
+spring.datasource.url: 設定資料庫的連線 URL。
+這裡使用的是 H2 內存資料庫，當應用關閉後資料庫中的資料會消失。
+若是想用其他資料庫，可以修改這個配置。
+spring.datasource.driver-class-name: 資料庫的驅動程式類名，這裡使用 H2 資料庫的驅動程式。
+spring.datasource.username & spring.datasource.password: 資料庫的用戶名和密碼。
+spring.h2.console.enabled=true: 啟用 H2 控制台界面，可以在瀏覽器中訪問 http://localhost:8080/h2-console 查看資料庫。
+spring.jpa.hibernate.ddl-auto=update: 這會告訴 JPA 每次啟動時自動更新資料庫結構。這對開發階段非常有用。
+spring.jpa.show-sql=true: 設定是否顯示 SQL 查詢。

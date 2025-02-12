@@ -1,0 +1,24 @@
+建立Soring-boot
+讓在vscode執行的java可以創立一個Web APP
+例如Hello簡單程式碼
+
+使用 Spring Initializr 創建 Gradle 項目：
+開啟 VS Code，進入 命令面板（按 Ctrl + Shift + P）
+輸入 Spring Initializr
+然後選擇 Spring Initializr: Gradle Project。
+填寫項目的細節：
+Group：例如 com.example
+Artifact：例如 test
+Dependencies：選擇 Spring Boot DevTools、Lombok、Spring Web
+
+點擊 Generate 生成項目。
+http://localhost:8080/hello
+
+在vscode java 使用spring boot gradle 建立註冊與登入、刪除帳號系統
+註冊 > @gmail.com (不可重複) > 密碼(須滿足8~12位元)
+註冊完畢後登入，輸入僅開放英文與數字
+或可以申請刪除帳號
+每個動作都可以選擇back或exit
+
++資料夾斜線
+.gitkeep

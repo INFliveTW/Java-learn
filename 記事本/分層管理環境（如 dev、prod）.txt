@@ -1,0 +1,96 @@
+Spring Boot 提供 Profiles 來區分不同環境
+> 分層管理環境（如 dev、prod）
+1. 開發階段(dev)：
+本地開發(可能需要debug、測試DB)
+
+2.測試環境(test)：
+測試區-獨立的測試DB
+Testcontainers：啟動Docker(MySQL...)，接近真實環境測試區
+
+Mock Services：模擬外部API或服務(第三方支付、無須實際連線外部伺服器)
+用於測試環境的模擬
+
+3.生產環境(prod)：
+上線區
+
+4.預備環境(staging)：
+待上線區(與prod類似)
+
+環境管理使用時機
+[方法一]
+spring boot gradel
+路徑：src/main/resources
+檔案名：application.properties
+內容：
+spring.application.name=【money】
+[同一行] spring.datasource.url=jdbc:sqlserver://127.0.0.1:1433;【docker sql port 1433】
+[同一行] databaseName=【money】;encrypt=true;trustServerCertificate=true
+spring.datasource.username=【sa】
+spring.datasource.password=【密碼】
+spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
+spring.jpa.database-platform=org.hibernate.dialect.SQLServerDialect
+spring.jpa.hibernate.ddl-auto=update
+
+[方法二]
+使用啟動參數
+執行 Java 應用程式時，透過 -Dspring.profiles.active 參數指定環境。
+./gradlew bootRun -Dspring.profiles.active=prod
+
+[方法三]
+Gradle 設定環境變數，針對 bootRun 設定不同環境
+檔案名：build.gradle
+
+bootRun {
+[同一行] systemProperty 'spring.profiles.active', 
+[同一行] System.getProperty('spring.profiles.active', 'dev')
+}
+
+[方法四]
+在 VS Code 設定環境
+.vscode/launch.json
+路徑：.vscode/launch.json
+需要切換環境時，修改 "vmArgs": "-Dspring.profiles.active=prod" 即可。
+{
+"version": "0.2.0",
+"configurations": [
+{
+"type": "java",
+"request": "launch",
+"mainClass": "com.example.MainApplication",
+"projectName": "my-spring-boot-app",
+"vmArgs": "-Dspring.profiles.active=dev"
+}
+
+[方法五]
+在 Docker 設定環境-在 Dockerfile 內
+ENV SPRING_PROFILES_ACTIVE=prod
+
+
+@Value
+允許從application.properties
+讀取設定值，注入spring bean
+用法
+@Component
+
+@Value("${spring.name/version/port}"
+private String springName/Version;
+private int soringPort;
+public void printConfig() {
+System.out.println("Spring SN/SV/SP: " + SN/SV/SP);
+
+@Value("${設定值}") 無法找到對應值時
+使用預設值來解決
+@Value("${spring.description:Default Spring Description}")
+
+用@Value 讀取List、Map
+spring.languages=Java
+
+@Value("#{'${spring.languages}'.split(',')}")
+private List<String> languages;
+
+@Value 搭配 SpEL(Spring Expression Language) 表達式
+@Value("#{2 + 3}")
+private int sum;  // sum = 5
+
+@Value主要讀取"單個"變數
+如要讀取多個，推薦使用 @ConfigurationProperties

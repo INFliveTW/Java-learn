@@ -1,0 +1,9 @@
+docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=1QAZ2WSX3EDc4@" -p 1433:1433 --name sql1 --hostname sql1 -d mcr.microsoft.com/mssql/server:2022-latest
+
+
+匯率轉換系統
+
+包含歷史
+有隻api打到外部api獲取匯率進sql
+抓取最新匯率資料
+並可察看歷史資料(日期區間)
