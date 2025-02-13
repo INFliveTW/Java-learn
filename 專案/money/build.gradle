@@ -4,21 +4,21 @@ plugins {
     id 'java'
 }
 
-group = 'com.example.money'
+group = 'com.example'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '23'
+sourceCompatibility = '23' // 設定 Java 版本
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web' // Web 功能
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA 支援
-    implementation 'com.microsoft.sqlserver:mssql-jdbc' // SQL Server JDBC 驅動
-    testImplementation 'org.springframework.boot:spring-boot-starter-test' // 測試依賴
+    implementation 'org.springframework.boot:spring-boot-starter-web' // REST API
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA 資料庫操作
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc' // SQL Server 連線
+    testImplementation 'org.springframework.boot:spring-boot-starter-test' // 測試
 }
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
 }

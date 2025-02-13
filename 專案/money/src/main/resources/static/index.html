@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即時匯率轉換</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        select, input, button {
+            margin: 10px;
+            padding: 5px;
+            font-size: 16px;
+        }
+        #time {
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>即時匯率轉換</h1>
+
+    <!-- 顯示當前時間 -->
+    <p id="time">時間載入中...</p>
+
+    <!-- 貨幣選擇 -->
+    <label>從：</label>
+    <select id="fromCurrency">
+        <option value="TWD">台幣 (TWD)</option>
+        <option value="USD">美金 (USD)</option>
+        <option value="JPY">日圓 (JPY)</option>
+    </select>
+
+    <label>轉換至：</label>
+    <select id="toCurrency">
+        <option value="TWD">台幣 (TWD)</option>
+        <option value="USD">美金 (USD)</option>
+        <option value="JPY">日圓 (JPY)</option>
+    </select>
+
+    <br>
+
+    <!-- 金額輸入 -->
+    <input type="number" id="amount" placeholder="輸入金額" min="0">
+    <button onclick="convertCurrency()">轉換</button>
+
+    <!-- 顯示結果 -->
+    <h2 id="result">請輸入金額並選擇貨幣</h2>
+
+    <script>
+        // 更新即時時間
+        function updateTime() {
+            const now = new Date();
+            const formattedTime = now.toLocaleString('zh-TW', { hour12: false });
+            document.getElementById('time').textContent = `當前時間：${formattedTime}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime(); // 立即更新一次
+
+        // 取得即時匯率
+        let exchangeRates = {};
+        async function fetchRates() {
+            try {
+                const response = await fetch('/api/rates');
+                const data = await response.json();
+
+                // 轉換數據格式
+                data.forEach(rate => {
+                    exchangeRates[rate.currency] = rate.rate;
+                });
+
+                console.log("取得的匯率資料：", exchangeRates);
+            } catch (error) {
+                console.error("取得匯率失敗", error);
+                alert("無法獲取匯率資料，請稍後再試");
+            }
+        }
+        fetchRates();
+
+        // 執行轉換
+        async function convertCurrency() {
+            const from = document.getElementById("fromCurrency").value;
+            const to = document.getElementById("toCurrency").value;
+            const amount = parseFloat(document.getElementById("amount").value);
+
+            if (isNaN(amount) || amount <= 0) {
+                document.getElementById("result").textContent = "請輸入有效的金額";
+                return;
+            }
+
+            // 呼叫後端轉換 API
+            try {
+                const response = await fetch(`/api/convert?from=${from}&to=${to}&amount=${amount}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    document.getElementById("result").textContent = data.error;
+                } else {
+                    document.getElementById("result").textContent =
+                        `${data.amount} ${data.from} = ${data.convertedAmount.toFixed(2)} ${data.to}`;
+                }
+            } catch (error) {
+                console.error("轉換失敗", error);
+                alert("轉換失敗，請稍後再試");
+            }
+        }
+    </script>
+
+</body>
+</html>

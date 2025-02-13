@@ -1,0 +1,16 @@
+version: '3.1'
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: money-db
+    restart: always
+    ports:
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: "1QAZ2WSX3EDc4@"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+
+volumes:
+  sqlserver_data:

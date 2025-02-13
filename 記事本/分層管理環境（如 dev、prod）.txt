@@ -65,6 +65,10 @@ bootRun {
 在 Docker 設定環境-在 Dockerfile 內
 ENV SPRING_PROFILES_ACTIVE=prod
 
+WeatherController.java
+Weather.java
+WeatherRepository.java
+WeatherService.java
 
 @Value
 允許從application.properties
