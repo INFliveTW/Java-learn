@@ -1,0 +1,19 @@
+@Value：讀取Spring Boot的配置值，從文件(application.properties/.ymi)中讀取設定的屬性
+
+使用 ${}語法引用配置文件中的屬性
+
+支援 String、int、boolean、List、Map 等類型
+
+@Value針對單個屬性，如要多屬性，必須為每個屬性寫@Value
+
+@Value("${spring.application.name }")
+private String appName;
+
+@GetMapping("/sayhello")
+public String sayHello() {
+return "呼叫 " + appName + "!";
+}
+
+spring.application.name=sayhello
+
+結果：呼叫sayhello
