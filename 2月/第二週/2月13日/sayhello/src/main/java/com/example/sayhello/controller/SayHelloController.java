@@ -16,6 +16,6 @@ public class SayHelloController {
     // 訪問 /api/sayhello 時返回包含應用名稱的問候語
     @GetMapping("/sayhello")
     public String sayHello() {
-        return "Hello from " + appName + "!";
+        return "呼叫 " + appName + "!";
     }
 }
