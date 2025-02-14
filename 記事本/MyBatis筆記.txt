@@ -30,8 +30,17 @@ UserController.java（Controller 層）
 @RestController：標示為 REST API
 @RequestMapping("/users")：設定 API 路徑
 @GetMapping, @PostMapping, @DeleteMapping：對應不同 HTTP 方法
+查詢、新增、刪除資料
+
+GET     /users      查詢所有使用者
+GET     /users/{id} 查詢特定使用者
+POST    /users      新增使用者
+PUT     /users/{id} 更新使用者
+DELETE  /users/{id} 刪除使用者
 
 MyBatis 透過Spring Boot 的 application.yml 設定檔
+
+不使用XML 使用 Mapper
 來自動載入資料庫連線設定以及MyBatis相關設定
 
 Docker 設定 docker-compose.yml
@@ -41,3 +50,8 @@ Docker 設定 docker-compose.yml
 創建資料庫
 
 執行專案 ./gradlew bootRun
+
+指定users資料
+http://localhost:8080/users
+
+.../users/1 查詢指定使用者(1號)
