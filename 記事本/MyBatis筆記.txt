@@ -1,25 +1,4 @@
 MyBatis Starter、簡單的資料庫
-
-企業管理系統(ERP)
-員工、倉庫、訂單管理系統
-Spring Boot + MyBatis操作資料庫。提供REST API
-
-OAuth2授權驗證、JWT登入系統、會員系統
-MyBatis存取用戶表，透過Spring Security權限管理
-
-產品管理、訂單管理、支付紀錄
-Spring Boot + MyBatis操作資料表，提供API給前端
-
-留言板或論壇
-MyBatis負責CRUD操作，Spring Boot提供API，前端可用 Vue.js 或 React
-
-Spring Boot - 開發後端應用程式
-Gradle - 作為建置管理工具
-MyBatis Starter - ORM 框架，簡化 SQL 操作
-Docker - 容器化應用，方便部署
-HeidiSQL - 管理 MySQL/MariaDB 資料庫
-VS Code - 開發工具，支援 Java
-
 src
  ├── main
  │   ├── java/com/example/usermanagement
@@ -34,17 +13,15 @@ src
  ├── docker-compose.yml        // Docker 設定
  ├── build.gradle              // Gradle 依賴管理
 
-
-
- 2.1 User.java（Model 層）
+User.java（Model 層）
  User 類別，對應 users 資料表，包含 id、name、email 屬性。
 
-2.2 UserRepository.java（Repository 層）
+UserRepository.java（Repository 層）
 @Mapper：讓 MyBatis 掃描這個 Repository
 @Select、@Insert、@Delete**：直接在 Java 內寫 SQL 指令
 
 
-2.3 UserService.java（Service 層）
+UserService.java（Service 層）
 Service 負責業務邏輯
 透過 Repository 層 來處理資料庫存取
 提供 CRUD（創建、查詢、儲存、刪除）
@@ -54,7 +31,8 @@ UserController.java（Controller 層）
 @RequestMapping("/users")：設定 API 路徑
 @GetMapping, @PostMapping, @DeleteMapping：對應不同 HTTP 方法
 
-MyBatis 設定 application.yml
+MyBatis 透過Spring Boot 的 application.yml 設定檔
+來自動載入資料庫連線設定以及MyBatis相關設定
 
 Docker 設定 docker-compose.yml
 
@@ -63,9 +41,3 @@ Docker 設定 docker-compose.yml
 創建資料庫
 
 執行專案 ./gradlew bootRun
-
-這個專案完整示範 Spring Boot + MyBatis + MS SQL + Docker，提供 CRUD API：
-
-MyBatis 整合
-Docker 啟動 MS SQL
-REST API 測試 希望這份指南能幫助你快速搭建 Spring Boot 應用程式！ 🚀
