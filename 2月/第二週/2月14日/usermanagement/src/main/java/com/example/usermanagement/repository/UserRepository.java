@@ -1,9 +1,14 @@
 package com.example.usermanagement.repository;
 
-import com.example.usermanagement.model.User;
-import org.apache.ibatis.annotations.*;
-
 import java.util.List;
+
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Options;
+import org.apache.ibatis.annotations.Select;
+
+import com.example.usermanagement.model.User;
 
 @Mapper  // 加上這個註解，讓 MyBatis 能夠正確掃描這個介面
 public interface UserRepository {

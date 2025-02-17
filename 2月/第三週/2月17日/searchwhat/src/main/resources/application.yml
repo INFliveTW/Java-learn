@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=weather_db
+    username: sa
+    password: 1QAZ2WSX3EDc4@
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver

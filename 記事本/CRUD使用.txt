@@ -1,0 +1,73 @@
+CRUD使用
+
+
+@Mapper
+public interface UserMapper {
+
+@Select("SELECT * FROM users")
+    List<User> findAllUsers();
+
+@Select("SELECT * FROM users WHERE id = #{id}")
+    User findUserById(Long id);
+
+@Insert("INSERT INTO users (name, email) VALUES (#{name}, #{email})")
+    void insertUser(User user);
+
+@Update("UPDATE users SET name = #{name}, email = #{email} WHERE id = #{id}")
+    void updateUser(User user);
+
+@Delete("DELETE FROM users WHERE id = #{id}")
+    void deleteUser(Long id);
+
+@Select-創建
+
+會查詢 ``xity_weather``特定城市的天氣資訊
+@Select("SELECT * FROM city_weather WHERE city_name = #{cityName}")
+CityWeather getWeatherByCityName(String cityName);
+
+
+@Insert-讀取
+
+執行資料插入操作(將資料新增進資料庫)
+@Insert("INSERT INTO city_weather(city_name, temperature, condition) VALUES(#{cityName}, #{temperature}, #{condition})")
+void insertCityWeather(CityWeather cityWeather);
+
+@Update-更新
+
+@Update("UPDATE city_weather SET temperature = #{temperature}, condition = #{condition} WHERE city_name = #{cityName}")
+void updateCityWeather(CityWeather cityWeather);
+
+@Delete-刪除
+
+@Delete("DELETE FROM city_weather WHERE city_name = #{cityName}")
+void deleteCityWeather(String cityName);
+
+
+controller
+處理API
+java.util.List;
+引入List介面(儲存多個shop物件)
+
+import
+Spring Web註解，協助建立REST API
+@RestController	告訴 Spring 這是一個 REST API 控制器，返回 JSON 資料
+@RequestMapping("/products")	定義這個控制器的 API 路徑為 /products
+@GetMapping	處理 GET 請求，通常用來獲取資料
+@PostMapping	處理 POST 請求，通常用來新增資料
+@DeleteMapping	處理 DELETE 請求，通常用來刪除資料
+@PathVariable	讓方法的參數可以從 URL 取得，例如 /products/{id}
+@RequestBody	讓方法接收請求的 JSON 物件，並轉換為 Java 物件
+
+
+import .....model.shop;
+import .....service.shopservice;
+shop:商品資料(對應資料庫)
+shopservice:業務邏輯(因controller負責處理HTTP請求，不負責業務)
+需呼叫service來處理實際資料操作
+
+
+GET /products → 取得所有產品
+GET /products/{id} → 根據 ID 取得特定產品
+POST /products → 新增產品
+DELETE /products/{id} → 刪除產品
+

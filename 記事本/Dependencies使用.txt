@@ -1,0 +1,40 @@
+Dependencies使用
+
+Spring Boot DevTools
+重啟、重載(頻繁修改程式，透過自動重啟變更)
+
+Lombok
+透過簡單註解@自動生成Java Bean
+須建立Java實體類(Entity)、DTO、VO
+但不想手動撰寫getter/setter/toString
+
+Spring Web
+@RestController
+@Controller、@ResponseBody - Web請求
+@GetMapping("/users") 回傳一個user物件列表
+
+@RequestMapping
+定義路徑與方法類型
+(GET、POST、PUT、DELETE)
+
+GET：查詢操作
+請求是安全的(伺服器資料不變更)
+請求為單獨(不保持前次請求狀態)
+
+POST：發送創建新資源(User物件)
+請求會更改伺服器上資料
+
+PUT：更新伺服器資源(完整替換)
+資源完全更新，不提供某些欄位時即清空
+
+DELETE：從伺服器刪除
+
+PATCH：部分資源更新(部分欄位)
+
+HEAD：查詢資源是否存在、最後修改時間
+
+OPTIONS：查詢伺服器支援的HTTP方法
+
+MS SQL Server Driver
+Spring Boot & Microsoft SQL Server 連線
+
