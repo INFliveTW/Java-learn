@@ -26,8 +26,24 @@ public class UserService {
     public void addUser(User user) {
         userRepository.save(user);
     }
-
-    public void deleteUser(int id) {
-        userRepository.deleteById(id);
+    
+    public void updateUser(int id, User user) {
+        User existingUser = userRepository.findById(id);
+        if (existingUser != null) {
+            // 只更新有提供的新值
+            if (user.getName() != null && !user.getName().isEmpty()) {
+                existingUser.setName(user.getName());
+            }
+            if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                existingUser.setEmail(user.getEmail());
+            }
+            userRepository.update(existingUser);
+        }
     }
+    
+    
+    public boolean deleteUser(int id) {
+        return userRepository.deleteById(id) > 0;
+    }
+    
 }

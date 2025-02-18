@@ -1,4 +1,4 @@
-package com.example.usermanagement.controller;
+package com.example.usermanagementold.controller;
 
 import java.util.List;
 
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.usermanagement.model.User;
-import com.example.usermanagement.service.UserService;
+import com.example.usermanagementold.model.User;
+import com.example.usermanagementold.service.UserService;
 
 @RestController
 @RequestMapping("/users")

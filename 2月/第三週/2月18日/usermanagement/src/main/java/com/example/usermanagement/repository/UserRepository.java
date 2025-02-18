@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import com.example.usermanagement.model.User;
 
@@ -23,6 +24,19 @@ public interface UserRepository {
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void save(User user);
 
+    @Update("<script>"
+    + "UPDATE users "
+    + "<set>"
+    + "<if test='name != null and name != \"\"'> name = #{name}, </if>"
+    + "<if test='email != null and email != \"\"'> email = #{email}, </if>"
+    + "</set>"
+    + "WHERE id = #{id}"
+    + "</script>")
+    void update(User user);
+
+
     @Delete("DELETE FROM users WHERE id = #{id}")
-    void deleteById(int id);
+    int deleteById(int id);
+    
+
 }

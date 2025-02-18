@@ -52,6 +52,6 @@ Docker 設定 docker-compose.yml
 執行專案 ./gradlew bootRun
 
 指定users資料
-http://localhost:8080/users
+http://localhost:8080/usersmanagment/api/1
 
 .../users/1 查詢指定使用者(1號)

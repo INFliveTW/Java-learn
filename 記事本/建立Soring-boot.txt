@@ -22,3 +22,51 @@ http://localhost:8080/hello
 
 +資料夾斜線
 .gitkeep
+
+datasorceconfig
+
+
+CREATE TABLE user_databaseuser_database (
+    id INT IDENTITY(1,1) PRIMARY KEY,  -- 自動遞增
+    username NVARCHAR(50) NOT NULL UNIQUE, -- 使用者名稱，支援 Unicode
+    email NVARCHAR(100) NOT NULL UNIQUE  -- 電子郵件，支援 Unicode
+);
+
+http://localhost:8080/users/get?id=1
+
+Invoke-WebRequest -Uri "http://localhost:8080/users" -Method POST -Headers @{ "Content-Type" = "application/json" } -Body '{"name": "王十三", "email": "tet@gmail.com"}'
+
+新增資料
+Invoke-WebRequest -Uri "http://localhost:8080/users" -Method POST -Headers @{ "Content-Type" = "application/json"; "Charset" = "utf-8" } -Body ([System.Text.Encoding]::UTF8.GetBytes('{"name": "王二三", "email": "twth@gmail.com"}'))
+
+查詢單一使用者
+Invoke-RestMethod -Uri "http://localhost:8080/users/get?id=24" -Method Get -ContentType "application/json; charset=utf-8"
+
+查詢所有使用者
+Invoke-RestMethod -Uri "http://localhost:8080/users" -Method Get -ContentType "application/json; charset=utf-8"
+
+更新資料(name)
+Invoke-RestMethod -Uri "http://localhost:8080/users/23" -Method Put -Body (@{name="新名稱"} | ConvertTo-Json) -ContentType "application/json; charset=utf-8"
+
+更新資料(email)
+Invoke-RestMethod -Uri "http://localhost:8080/users/23" -Method Put -Body (@{email="newemail@example.com"} | ConvertTo-Json) -ContentType "application/json; charset=utf-8"
+
+更新資料(name & email)
+Invoke-RestMethod -Uri "http://localhost:8080/users/23" -Method Put -Body (@{name="新名稱"; email="newemail@example.com"} | ConvertTo-Json) -ContentType "application/json; charset=utf-8"
+
+刪除資料
+Invoke-WebRequest -Uri "http://localhost:8080/users/23" -Method Delete
+
+userreq
+物件re
+name email
+
+user
+user.re....
+
+api
+請求是中文
+程式收進來問號還是sql是問號
+
+指定id欄位變更資料內容update
+

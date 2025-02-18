@@ -1,0 +1,9 @@
+model 傳遞資料
+
+/user
+
+:/users/id
+
+controller 放置api
+
+http://localhost:8080/users/1
