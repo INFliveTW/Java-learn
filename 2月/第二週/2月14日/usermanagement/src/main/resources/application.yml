@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=usermanagement;encrypt=false
+    username: sa
+    password: 1QAZ2WSX3EDc4@
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true  # 自動將資料庫的下劃線命名轉換為 Java 駝峰命名
