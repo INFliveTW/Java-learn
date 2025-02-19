@@ -71,3 +71,25 @@ GET /products/{id} → 根據 ID 取得特定產品
 POST /products → 新增產品
 DELETE /products/{id} → 刪除產品
 
+
+GET請求
+獲取用戶 @GetMapping，端點 /users
+
+用戶訪問/users時觸發getAllUsers()方法
+UserService 又通過 UserRepository.findAll() 
+從資料庫中查詢所有用戶。
+
+SQL在UserRepository中的 @Select("SELECT * FROM users")
+會返回List<User> 用戶ID、姓名、電子郵件
+
+/users/get?id={id}
+
+
+POST請求
+創建用戶 @PostMapping，端點 /users
+客戶端向 /users 發送 POST 請求時，會觸發 addUser 方法
+
+接受一個 @RequestBody User user 參數
+包含名稱（name）和電子郵件（email）字段
+
+

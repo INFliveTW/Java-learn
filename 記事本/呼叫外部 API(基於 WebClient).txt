@@ -1,0 +1,159 @@
+●  呼叫外部 API（基於 WebClient）
+> 基本使用（GET、POST 請求）
+> 使用 Mono 處理單一結果
+> 呼叫公開的 JSON API（如天氣、匯率資訊）
+> 簡單的異常處理（如連線失敗）
+
+使用WebClient進行HTTP請求
+實際應用更常使用subscribe來處理非阻塞結果
+而非使用block方法
+block會阻止當前線程等待結果
+
+WebClient
+Spring Framework 的一部分
+Spring WebFlux 中用於進行非阻塞的 HTTP 請求
+WebClient 提供了一個靈活的
+功能性的接口來發送和接收 HTTP 請求和響應
+
+subscribe
+在 Reactor 中，subscribe 用於啟動一個 Flux 或 Mono 的執行
+並訂閱其事件流。它是非阻塞的
+意味著當你發出 subscribe 後，線程不會被阻塞
+
+非阻塞結果
+非阻塞結果指的是操作不會阻塞當前線程
+允許其它請求或任務在等待結果時繼續進行
+這在高並發環境中非常重要
+
+block
+雖然 WebFlux 旨在非阻塞
+但 block() 方法用於將一個非阻塞的操作轉換為阻塞操作
+讓當前線程等待，直到操作完成並返回結果
+這通常應該避免，因為它會阻塞線程
+
+阻止當前線程
+指的是一個操作（如調用 block()）會讓當前線程等待
+無法處理其他請求，直到操作完成。這與非阻塞設計背道而馳
+
+Spring Framework
+一個全面、模塊化的 Java 開發框架，用於構建企業級應用
+
+
+Spring WebFlux
+Spring 5 引入的新的非阻塞、Reactive 堆棧的 Web 框架
+專門為處理高並發和非阻塞 I/O 設計
+
+Reactive Streams
+一種標準，用於非阻塞的流式處理數據
+支持背壓（backpressure）管理
+確保生產者和消費者之間的平衡
+
+非阻塞的IO操作
+I/O 操作（如網絡請求、文件讀寫）
+不會阻塞線程，允許同時處理多個操作
+
+高並發性
+通過非阻塞的設計，應用可以使用較少的線程
+來處理大量的並發請求，提高資源利用率
+
+Reactive：Reactor的Mono & Flux類型集成
+Mono：表示 0 或 1 個元素的序列，適合返回單個結果的操作
+Flux：表示 0 至 N 個元素的序列，適合返回多個結果或無限流
+
+非阻塞的 HTTP 請求
+使用 WebClient 等工具進行 HTTP 請求時
+請求不會阻塞線程，這意味著一個線程可以處理多個請求
+
+Reactive應用新一代Web框架
+WebFlux 等框架提供了對 Reactive Streams 的支持
+允許開發者構建能夠處理大量並發的應用
+
+非阻塞的Web堆棧
+WebFlux 提供了一個完全非阻塞的 Web 堆棧
+從服務器到客戶端都支持非阻塞操作
+
+如何應用微服務
+使用 Spring WebFlux 構建微服務時
+可以充分利用其非阻塞特性，特別是在需要高吞吐量或低延遲的場景下
+
+Reactive Streams標準
+確保了不同 Reactive 庫之間的互操作性
+如 Reactor 和 RxJava，從而能夠在各種 Reactive 環境中使用
+
+
+Spring Framework鐘用於構建
+Reactive應用新一代Web框架
+支持非阻塞的Web堆棧，適合微服務和高並發場景
+Reactive Streams標準
+
+WebClient、subscribe、非阻塞結果、block、阻止當前線程
+Spring Framework、Spring WebFlux、Reactive Streams
+非阻塞的IO操作、高並發性、Reactive：Reactor的Mono & Flux類型集成
+非阻塞的 HTTP 請求、Reactive應用新一代Web框架的框架
+非阻塞的Web堆棧、如何應用微服務、Reactive Streams標準
+
+發送 GET 和 POST 請求
+
+import org.springframework.web.reactive.function.client.WebClient;
+
+WebClient client = WebClient.create("https://example.com"); // 創建 WebClient 實例
+
+GET 請求
+
+String response = client.get() // 發起 GET 請求
+    .uri("/api/data") // 設置 URI
+    .retrieve() // 獲取響應
+    .bodyToMono(String.class) // 將響應體轉換為 Mono<String>
+    .block(); // 阻塞以獲取結果（非典型操作，僅為展示）
+
+System.out.println(response);
+
+POST 請求
+
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.MediaType;
+
+WebClient client = WebClient.create("https://example.com");
+
+String response = client.post() // 發起 POST 請求
+    .uri("/api/data") // 設置 URI
+    .contentType(MediaType.APPLICATION_JSON) // 設置 Content-Type 為 JSON
+    .bodyValue("{\"key\":\"value\"}") // 設置請求體
+    .retrieve() // 獲取響應
+    .bodyToMono(String.class) // 將響應體轉換為 Mono<String>
+    .block(); // 阻塞以獲取結果（非典型操作，僅為展示）
+
+System.out.println(response);
+
+weather-api/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── example/
+│   │   │           └── weather/
+│   │   │               ├── WeatherApiApplication.java    // 應用程序入口
+│   │   │               ├── config/                      // 配置類
+│   │   │               │   └── WebClientConfig.java     // WebClient 配置
+│   │   │               ├── controller/                  // 控制器層
+│   │   │               │   └── WeatherController.java   // 處理 HTTP 請求
+│   │   │               ├── model/                       // 數據模型
+│   │   │               │   └── WeatherResponse.java     // 天氣數據模型
+│   │   │               └── service/                     // 服務層
+│   │   │                   └── WeatherService.java      // 業務邏輯
+│   │   └── resources/                                   // 資源文件
+│   │       └── application.properties                   // 配置文件
+│   └── test/                                            // 測試文件（這裡省略）
+├── build.gradle                                         // Gradle 建置文件
+└── README.md                                            // 項目說明（可選）
+
+
+
+總結：用途與使用場景
+整體用途：WeatherController 是你的應用與外部客戶端（瀏覽器、Postman 等）交互的入口。它負責接收 HTTP 請求（這裡是 GET），調用 WeatherService 獲取數據，並返回結果給用戶。它使用 Spring WebFlux 和 WebClient 實現非阻塞和反應式設計，適合高並發場景。
+使用場景：
+當用戶想要查詢某個城市（如 Taipei）的天氣時，通過發送 GET 請求到 http://localhost:8080/weather/Taipei。
+在 Web 應用程序、後端服務或微服務架構中作為 API 提供者。
+為什麼要分層？
+控制器（WeatherController）只負責 HTTP 層的交互，不涉及業務邏輯或外部 API 細節。業務邏輯由 WeatherService 處理，數據結構由 WeatherResponse 定義。這種分離使代碼更模塊化、可維護和可測試。
+

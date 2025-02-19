@@ -1,0 +1,49 @@
+//處理 HTTP 請求(返回對應數據)，Web使用controller，API使用RestController
+//使用GetMapping，標記為GET請求，定義RESTful API的端點
+package com.example.weather.controller;
+//是controller的一種
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.weather.model.WeatherResponse;
+import com.example.weather.service.WeatherService;
+
+import reactor.core.publisher.Mono;
+//GetMapping
+//weather/[city]，其中city是用戶輸入的城市名稱
+
+//PathVariable
+//從URL中獲取參數(city)，並將其傳遞給getWeather方法
+
+//RestController
+//標記為RESTful API的控制器，返回的數據是JSON格式
+
+//model.WeatherResponse
+//導入WeatherResponse類，表示外部API返回天氣數據
+
+//service.WeatherService
+//導入WeatherService類，負責調用外部API獲取天氣數據
+
+//reactor.core.publisher.Mono
+//處理單一非阻塞結果，(單一結果)
+@RestController
+//API回傳的是資料，而非頁面
+public class WeatherController {
+
+    private final WeatherService weatherService;
+    private final String API_KEY = "3c1535f5d389f81e4f084d6712d5e572"; // 替換為你的 API 金鑰
+    //存儲OpenWeatherMap API金鑰
+    public WeatherController(WeatherService weatherService) {
+        this.weatherService = weatherService;
+    }
+    //this.是指向當前對象的引用，即WeatherController對象
+    //明確引用當前對象的成員變量
+
+    //GET請求，返回天氣
+    @GetMapping("/weather/{city}")
+    public Mono<WeatherResponse> getWeather(@PathVariable String city) {
+        return weatherService.getWeather(city, API_KEY);
+    }
+    //處理HTTP GET請求，返回天氣
+}

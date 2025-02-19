@@ -1,0 +1,44 @@
+註解
+
+
+@SpringBootApplication 註解
+啟用 Spring Boot 自動配置
+等同於 @Configuration
+
+@SpringBootConfiguration
+等同@Configuration
+允許在該類中定義 @Bean 方法來手動配置 Spring Bean
+
+
+@EnableAutoConfiguration
+啟用 Spring Boot 自動配置
+讓 Spring 根據 classpath 依賴來配置 Bean
+
+@ComponentScan讓 Spring Boot 自動掃描 Spring 組件
+（如 @Service、@Repository、@Controller 等）
+
+何時使用？
+建構Spring Boot時
+開發微服務、REST API或Web時
+
+@Configuration
+標示一個類別配置類
+
+
+@RestController
+
+ @Controller 和 @ResponseBody 的組合
+用於返回 JSON 或其他數據格式的 API
+
+
+
+
+
+
+
+
+
+
+
+
+
