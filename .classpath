@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="2月/第三週/2月19日/weather/src/main/java/com/example/weather"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

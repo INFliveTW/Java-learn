@@ -1,0 +1,28 @@
+api  propties autowird
+寫讀設定檔物件
+
+api key 修改到yml
+
+
+
+class為荷包在另一個class內
+
+四種修飾詞public...
+
+多行寫法interface
+
+service定義方法
+
+駝峰式命名
+大寫...小寫
+大駝峰
+第一字元大寫
+class WeatherCity
+第二個以後第一字元大寫
+getWeatherCity
+
+
+openweathermap:
+  api:
+    key: "3c1535f5d389f81e4f084d6712d5e572"
+    base-url: "https://api.openweathermap.org/data/2.5"
