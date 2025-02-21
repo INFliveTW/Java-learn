@@ -1,4 +1,3 @@
-//天氣數據模型
 package com.example.weather.model;
 
 import lombok.Data;

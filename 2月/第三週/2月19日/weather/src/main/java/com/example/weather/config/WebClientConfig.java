@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class WebClientConfig {
-    
+
     private final WeatherProperties weatherProperties;
 
     public WebClientConfig(WeatherProperties weatherProperties) {
@@ -16,7 +16,7 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
-                .baseUrl(weatherProperties.getBaseUrl())
+                .baseUrl(weatherProperties.getBaseUrl()) // ✅ 確保 baseUrl 設定正確
                 .build();
     }
 }

@@ -1,0 +1,11 @@
+service改用多行寫法
+
+寫個專門讀propties物件
+在Controller使用@Value
+
+將@VLUE
+呼叫Autowird物件
+
+YML
+獨立出來
+將API更改到weather底下
