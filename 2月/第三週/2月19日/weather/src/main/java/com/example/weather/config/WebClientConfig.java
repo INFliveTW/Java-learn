@@ -16,7 +16,7 @@ public class WebClientConfig {
     @Bean
     public WebClient webClient() {
         return WebClient.builder()
-                .baseUrl(weatherProperties.getBaseUrl()) // ✅ 確保 baseUrl 設定正確
+                .baseUrl(weatherProperties.getBaseUrl()) // 使用 WeatherProperties 的 baseUrl
                 .build();
     }
 }

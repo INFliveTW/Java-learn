@@ -1,0 +1,251 @@
+src > main > java > com > example > weather >
+build.gradle
+
+//Gradle 建置文件
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'io.projectreactor:reactor-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+config >
+WeatherProperties.java
+
+package com.example.weather.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import jakarta.annotation.PostConstruct;
+
+@Configuration
+@ConfigurationProperties(prefix = "weather.api")
+public class WeatherProperties {
+    private String key;
+    private String baseUrl;
+
+    // ✅ 確保 key 和 baseUrl 讀取成功
+    @PostConstruct
+    public void init() {
+        System.out.println("API Key: " + key);
+        System.out.println("Base URL: " + baseUrl);
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+        this.baseUrl = baseUrl;
+    }
+}
+
+
+WebClientConfig.java
+
+package com.example.weather.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Configuration
+public class WebClientConfig {
+
+    private final WeatherProperties weatherProperties;
+
+    public WebClientConfig(WeatherProperties weatherProperties) {
+        this.weatherProperties = weatherProperties;
+    }
+
+    @Bean
+    public WebClient webClient() {
+        return WebClient.builder()
+                .baseUrl(weatherProperties.getBaseUrl()) // ✅ 確保 baseUrl 設定正確
+                .build();
+    }
+}
+
+
+controller >
+WeatherController.java
+
+package com.example.weather.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.weather.model.WeatherResponse;
+import com.example.weather.service.WeatherService;
+
+import reactor.core.publisher.Mono;
+
+@RestController
+@RequestMapping("/weather")
+public class WeatherController {
+
+    private final WeatherService weatherService;
+
+    // 使用建構子注入 WeatherService，這樣可以更容易更換不同的實作（如 OpenWeatherService）
+    public WeatherController(WeatherService weatherService) {
+        this.weatherService = weatherService;
+    }
+
+    @GetMapping("/{city}")
+    public Mono<WeatherResponse> getWeather(@PathVariable String city) {
+        return weatherService.getWeather(city);
+    }
+}
+
+
+model >
+WeatherResponse.java
+
+package com.example.weather.model;
+
+import lombok.Data;
+
+@Data
+public class WeatherResponse {
+    private Main main;
+    private String name;
+    private Weather[] weather;
+
+    @Data
+    public static class Main {
+        private double temp;
+        private int humidity;
+    }
+
+    @Data
+    public static class Weather {
+        private String description;
+    }
+}
+
+
+service >
+OpenWeatherService.java
+
+package com.example.weather.service;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.weather.config.WeatherProperties;
+import com.example.weather.model.WeatherResponse;
+
+import reactor.core.publisher.Mono;
+
+@Service
+public class OpenWeatherService implements WeatherService {
+
+    private final WebClient webClient;
+    private final WeatherProperties weatherProperties;
+
+    public OpenWeatherService(WebClient webClient, WeatherProperties weatherProperties) {
+        this.webClient = webClient;
+        this.weatherProperties = weatherProperties;
+    }
+
+    @Override
+    public Mono<WeatherResponse> getWeather(String city) {
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.path("/weather")
+                        .queryParam("q", city)
+                        .queryParam("appid", weatherProperties.getKey()) // 從 WeatherProperties 取 API key
+                        .queryParam("units", "metric") // 使用攝氏度
+                        .build())
+                .retrieve()
+                .bodyToMono(WeatherResponse.class);
+    }
+}
+
+
+WeatherService.java
+
+package com.example.weather.service;
+
+import com.example.weather.model.WeatherResponse;
+
+import reactor.core.publisher.Mono;
+
+public interface WeatherService {
+    Mono<WeatherResponse> getWeather(String city);
+}
+
+
+WeatherApiApplication.java
+
+package com.example.weather;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication // @SpringBootApplication 註解
+public class WeatherApiApplication { // WeatherApiApplication 類別
+
+    public static void main(String[] args) {
+        SpringApplication.run(WeatherApiApplication.class, args);
+    }
+}
+
+
+resources >
+application.yml
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: weather-api
+
+weather:
+  api:
+    key: "3c1535f5d389f81e4f084d6712d5e572"
+    base-url: "https://api.openweathermap.org/data/2.5"

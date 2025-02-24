@@ -1,0 +1,18 @@
+錯誤處理
+ErrorMessage
+統一處理異常狀態
+使用WebClient呼叫天氣API
+400(錯誤請求)：城市名稱錯誤
+401(未找到)：城市不存在
+404(未授權)：API Key無效
+500(伺服器錯誤)：API伺服器故障
+
+Spring提供 @ControllerAdvice 捕捉/處理異常
+GlobalExceptionHandler.java 集中處理異常(避免分散)/呼叫錯誤
+
+GlobalExceptionHandler
+handleWebClientResponseException：處理WebClient HTTP錯誤
+handleGenericException：處理未預期異常(符號、非英文)
+
+
+
