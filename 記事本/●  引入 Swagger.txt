@@ -1,0 +1,12 @@
+引入 Swagger
+整合 Swagger 並撰寫 API 文件
+熟悉 Swagger UI 操作
+
+Swagger Viewer 或 OpenAPI (Swagger) Editor 插件
+
+implementation 'io.springfox:springfox-swagger2:3.0.0'
+implementation 'io.springfox:springfox-swagger-ui:3.0.0'
+
+列舉ErrorEnum
+
+@ControllerAdvice: 標記此類為全局異常處理器，適用於所有控制器。

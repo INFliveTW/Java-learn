@@ -1,5 +1,5 @@
 package com.example.weather.config;
-//集中處理異常(避免分散)/呼叫錯誤
+
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
         } else if (status.is5xxServerError()) {
             errorMessage = "伺服器錯誤，請稍後再試";
         } else {
-            errorMessage = "發生未預期的錯誤: " + ex.getMessage();
+            errorMessage = "發生未預期的錯誤，請聯繫管理員"; // + ex.getMessage(); = 不公開錯誤資訊
         }
 
         ErrorMessage error = new ErrorMessage(status.value(), errorMessage);
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ErrorMessage>> handleGenericException(Exception ex) {
-        ErrorMessage error = new ErrorMessage(400, "請求無效，請輸入有效的城市名稱（避免數字或特殊符號）");
-        return Mono.just(ResponseEntity.status(HttpStatusCode.valueOf(400)).body(error));
+        ErrorMessage error = new ErrorMessage(500, "伺服器內部錯誤，請聯繫管理員");
+        return Mono.just(ResponseEntity.status(HttpStatusCode.valueOf(500)).body(error));
     }
 }
