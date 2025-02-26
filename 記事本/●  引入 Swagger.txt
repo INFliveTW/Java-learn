@@ -10,3 +10,22 @@ implementation 'io.springfox:springfox-swagger-ui:3.0.0'
 列舉ErrorEnum
 
 @ControllerAdvice: 標記此類為全局異常處理器，適用於所有控制器。
+
+@Configuration：
+Spring 註解， SwaggerConfig 是個配置（Configuration Class）。
+它這個類包含了用於配置應用程式的 Bean 定義或其他設定。
+SwaggerConfig 用於配置 SpringDoc OpenAPI（Swagger 的現代替代方案），以生成 API 文檔。
+
+@OpenAPIDefinition：
+SpringDoc OpenAPI 註解，
+定義 OpenAPI 規範（基於 OpenAPI 3.0）
+info = @Info(title = "Weather Forecast API", version = "1.0")
+提供API基本資訊：
+title = "Weather Forecast API"：指定 API 的名稱，在 Swagger UI 中顯示為標題。
+version = "1.0"：指定API版本，API變更。
+這個註解告訴 SpringDoc 為您的應用程式生成一個 OpenAPI 規範
+內容包括 API 的名稱和版本，供 Swagger UI 展示。
+
+設計、構建、記錄和使用REST API
+NSwag
+Swagger UI 和 Swagger 產生器

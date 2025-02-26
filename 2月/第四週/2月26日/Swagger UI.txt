@@ -1,0 +1,9 @@
+Swagger UI
+API視覺化
+允許用戶直接輸入、發送請求
+並查看響應，無須額外工具(Postman)
+下載OpenAPI規範(JSON/YAML)
+供其他工具或開發者使用
+
+程式同步，根據註解自動更新API文檔
+

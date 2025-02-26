@@ -1,1 +1,20 @@
+API網址&Swagger網站
+
+東京天氣預報
 http://localhost:8080/weather/forecast?city=Tokyo
+
+Swagger網站
+http://localhost:8080/swagger-ui.html
+
+weatherforecast
+Config > SwaggerConfig.java
+
+Controller > WeatherController.java
+
+Response > WeatherResponse.java
+
+Application.java
+
+application.yml
+
+build.gradle
