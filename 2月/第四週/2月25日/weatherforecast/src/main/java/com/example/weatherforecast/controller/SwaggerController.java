@@ -1,4 +1,4 @@
-package com.example.weatherforecast.Controller;
+package com.example.weatherforecast.controller;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -20,7 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/weather")
 @Tag(name = "天氣預報 API", description = "提供天氣預報相關的 API 端點")
-public class WeatherController {
+public class SwaggerController {
 
     @Value("${weather.api-key}")
     private String apiKey;

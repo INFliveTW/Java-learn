@@ -1,0 +1,31 @@
+package 小寫
+
+●  進階 Spring Boot 開發
+> 使用 @RequestParam、@PathVariable 傳遞參數
+
+@PathVariable
+接收url路徑變數(/users/123)
+通常用於RESTful API、GET、PUT、DELETE
+
+@PathVariable("ID")，對應路徑中的ID
+
+@RequestParam
+提取資料來源：URL查詢參數(如?key=value)
+使用場景：過濾、搜尋、可選參數
+典型HTTP方法：GET
+可選性：可設置required=false
+
+@PathVariable
+提取資料來源：URL路徑中的變數(如/path/{var})
+使用場景：RESTful資源定位，例如ID
+典型HTTP方法：GET、PUT、DELETE
+可選性：預設為必要參數
+
+如果需要使用兩者
+請求：GET /api/users/123?name=john
+輸出User ID:.123, Name: john
+
+@RequestParam 可以接收多值，如 ?
+hobbies=reading&hobbies=coding
+用 List<String> 接收
+
