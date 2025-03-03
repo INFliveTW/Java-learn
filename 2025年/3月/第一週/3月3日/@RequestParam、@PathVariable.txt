@@ -1,0 +1,48 @@
+/* 舊用法@RequestParam */ ：/weather/forecast
+http://localhost:8080/weather/forecast?city=taipei
+
+    /*
+    @GetMapping("/forecast")
+    @Operation(summary = "獲取 5 天天氣預報", description = "輸入城市名稱，返回未來 5 天天氣預報")
+    public WeatherResponse getWeatherForecast1(
+            @Parameter(description = "城市名稱", required = true) @RequestParam("city") String city) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String url = baseUrl + "?q=" + city + "&appid=" + apiKey + "&units=metric&cnt=5";
+            HttpGet request = new HttpGet(url);
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                String jsonResponse = EntityUtils.toString(response.getEntity());
+                WeatherResponse weather = new WeatherResponse();
+                weather.setCity(city);
+                weather.setForecast(jsonResponse);
+                return weather;
+            }
+        } catch (Exception e) {
+            WeatherResponse errorResponse = new WeatherResponse();
+            errorResponse.setCity(city);
+            errorResponse.setForecast("Error: " + e.getMessage());
+            return errorResponse;
+        }
+        */
+
+
+/* 新用法@PathVariable */： /weather/city/{city}
+http://localhost:8080/weather/city/taipei
+
+    /*
+    @GetMapping("/city/{city}")
+    public WeatherResponse getWeather(
+            @Parameter(description = "城市名稱", required = true)
+            @PathVariable("city") String city) {
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            String url = baseUrl + "?q=" + city + "&appid=" + apiKey + "&units=metric&cnt=5";
+            HttpGet request = new HttpGet(url);
+            try (CloseableHttpResponse response = httpClient.execute(request)) {
+                String jsonResponse = EntityUtils.toString(response.getEntity());
+                WeatherResponse weather = new WeatherResponse();
+                weather.setCity(city);
+                weather.setForecast(jsonResponse);
+                return weather;
+            }
+        } catch (Exception e) {  // 添加異常處理
+            throw new RuntimeException("Failed to fetch weather data: " + e.getMessage(), e);
+    */
