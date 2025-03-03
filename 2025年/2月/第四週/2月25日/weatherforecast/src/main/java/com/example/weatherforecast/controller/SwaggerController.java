@@ -70,13 +70,12 @@ public class SwaggerController {
         }
     }
 }
-
 /* 舊用法 */
     /*
     @GetMapping("/forecast")
     @Operation(summary = "獲取 5 天天氣預報", description = "輸入城市名稱，返回未來 5 天天氣預報")
-    public WeatherResponse getWeatherForecast1(
-            @Parameter(description = "城市名稱", required = true) @RequestParam("city") String city) {
+    public WeatherResponse getWeatherForecast2(
+            @Parameter(description = "城市名稱", required = true) @RequestParam("city") String city){
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String url = baseUrl + "?q=" + city + "&appid=" + apiKey + "&units=metric&cnt=5";
             HttpGet request = new HttpGet(url);
@@ -93,7 +92,8 @@ public class SwaggerController {
             errorResponse.setForecast("Error: " + e.getMessage());
             return errorResponse;
         }
-        */
+}
+*/
 /* 新用法 */
     /*
     @GetMapping("/city/{city}")

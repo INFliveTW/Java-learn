@@ -1,0 +1,29 @@
+Spring Boot參數註解
+
+@RequestParam
+放在URL後的參數
+/users?id=1 【id輸入1】
+//程式
+@RequestParam("/users")
+public String users(@RequestParam Integer id)
+如果是name則為String name
+
+
+@PathVariable
+放在URL路徑中的值
+/user/1
+使用@RequestMapping定義URL路徑
+定義成 /users/{id}
+@RequestParam("/users/{id}")
+public String users(@PathVariable Integer id)
+
+
+@RequestBody
+放在request body
+@RequestMapping("/users")
+public String users(@RequestBody Student student)
+
+
+@RequestHeader
+放在request header中的參數
+key & value方式存放

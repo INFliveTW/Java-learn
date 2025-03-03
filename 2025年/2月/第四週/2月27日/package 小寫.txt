@@ -25,7 +25,12 @@ package 小寫
 請求：GET /api/users/123?name=john
 輸出User ID:.123, Name: john
 
-@RequestParam 可以接收多值，如 ?
-hobbies=reading&hobbies=coding
+@RequestParam 可以接收多值，如 
+?a=reading&a=coding
+無效!
+因a已被定義一次，不可重複定義
+例如/weather/指定city
+無法改成/weather/指定city&city因為不可重複
+
 用 List<String> 接收
 
