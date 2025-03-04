@@ -1,0 +1,33 @@
+異常處理與全局例外處理（@ControllerAdvice、@ExceptionHandler）
+避免程式崩潰，提供易懂的錯誤訊息
+
+@ExceptionHandler
+用 @ExceptionHandler 時：你的應用程式簡單
+錯誤處理只需要在某個控制器裡處理。
+
+
+局限於單個控制器，處理該控制器內的錯誤。
+適合簡單應用或特定控制器需要特殊錯誤處理的情況。
+零基礎者理解：就像給每個房間裝一個獨立的警報器，只管那個房間的問題。
+
+@ControllerAdvice
+用 @ControllerAdvice 時：你的應用程式有許多控制器
+想統一處理所有錯誤，讓程式碼乾淨、有序。
+
+適用於所有控制器，統一管理錯誤。
+適合大應用程式或需要一致錯誤回應的場景。
+零基礎者理解：就像在整棟房子裝一個總警報器，任何房間出問題都會統一報警。
+
+“輸入有錯誤，請檢查貨幣代碼！”
+“找不到這個匯率，請確認 ID 是否正確。”
+“系統出問題了，請稍後重試。”
+
+@ExceptionHandler
+寫在控制器類（@RestController 或 @Controller）中的方法上
+處理該控制器的異常。
+
+@ControllerAdvice
+寫在一個獨立的類上通常放在 exception 資料夾
+處理應用程式中所有控制器的異常。
+
+控制器裡（@ExceptionHandler）或獨立類裡（@ControllerAdvice）

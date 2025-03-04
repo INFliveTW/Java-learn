@@ -1,0 +1,44 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.3'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+}
+
+group = 'com.currencyexchange'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Spring Boot Web 依賴
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Boot JPA 依賴
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // MSSQL JDBC 驅動（使用最新穩定版本）
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:9.4.0.jre17'
+
+    // Springdoc OpenAPI for Swagger UI
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+
+    // Lombok 依賴（用於 @Value）
+    implementation 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Jakarta Persistence API（確保 JPA 注解正常工作）
+    implementation 'jakarta.persistence:jakarta.persistence-api:3.1.0'
+
+    // Spring Boot 開發工具（可選）
+    runtimeOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 測試依賴
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
