@@ -1,0 +1,102 @@
+例外處理，程式之中
+
+trychecked例外異常處理
+使用時機、用途用法與情境
+
+source file編譯就算成功但執行也可能出錯
+報錯稱為例外
+
+RuntimeException 跑程式發生例外
+不一定要指定對應方式
+
+非RuntimeException例外
+又稱checked例外
+必須指定對應方式
+通常是外部檔案或DataBase
+
+在方法簽名中透過 throws 聲明
+例如 IOException、SQLException
+異常在 try-catch 塊中處理
+
+使用 @ControllerAdvice 和 @ExceptionHandler
+處理 IOException：
+
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.io.IOException;
+@ControllerAdvice
+
+@ExceptionHandler(IOException.class)
+public ResponseEntity<Object> handleIOException(IOException ex, WebRequest request) {
+   Map<String, Object> body = new HashMap<>();
+   body.put("timestamp", LocalDateTime.now());
+   body.put("message", "檔案操作失敗，請檢查輸入或稍後再試");
+   body.put("details", ex.getMessage());
+   body.put("path", request.getDescription(false));
+
+return new ResponseEntity<>(body,HttpStatus.INTERNAL_SERVER_ERROR);
+
+
+當 /read-file 被呼叫，如果檔案不存在
+IQException 被拋出
+由 GlobalExceptionHandler 捕獲並返回JSON回應
+
+會出現 @ExceptionHandler 的 錯誤訊息：時間/訊息/檔案/路徑
+{
+  "timestamp": "2025-03-04T22:23:45.123",
+  "message": "檔案操作失敗，請檢查輸入或稍後再試",
+  "details": "non_existent_file.txt (No such file or directory)",
+  "path": "uri=/read-file"
+}
+
+
+使用情境
+1.檔案處理
+:當使用者上傳檔案時發生
+用 @ExceptionHandler(IOException.class) 捕獲異常
+返回 500 OR 400情況
+
+2.資料庫
+執行查詢時
+返回 503(服務不可用)
+
+3. 外部API呼叫 ConnectException (受檢例外)
+全局捕獲 502
+
+4.輸入驗證失敗
+
+@InitBinder(用於設置
+WebDataBinder),
+WebDataBinder是用來自動綁定前台
+請求參數到Model中
+
+
+SQL(CRUD功能)
+連線失敗
+
+API伺服器不可用(IOException,HttpTimeoutExcepti)on)
+
+
+@Excepti)on 用於Spring Boot統一處理異常
+try-catch 局部異常處理
+
+controller處理全局異常
+service 使用try-catch局部處理異常
+
+全局異常 GlobalExceptionHandler
+返回對應HTTP錯誤訊息
+
+Service使用 try-catch捕捉異常 傳送全局
+
+try (Connection conn = DriverManager.getConnection(url, user, password);
+PreparedStatement stmt = conn.prepareStatement("SELECT * FROM users WHERE id = ?")) {
+
+catch (SQLException e) {
+throw new RuntimeException("Database Error: " + e.getMessage());
+
+/users/{id} 發生異常時 會由 @ExceptionHandler 處理
+
+避免程式崩潰 使用 
+return 0;
+return "Invalid input";
