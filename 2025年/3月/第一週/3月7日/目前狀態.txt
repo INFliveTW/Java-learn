@@ -14,3 +14,7 @@ APL獲取所有匯率
 計算匯率
 
 列印結果
+
+API KEY網站
+
+https://app.exchangerate-api.com/dashboard
