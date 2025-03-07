@@ -1,0 +1,7 @@
+目前狀態
+
+https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_RNZT1IxqlN5F0qnROpZk2SfjmLlXGIWHTB6Gw5Y8
+
+/latest/{base}
+
+https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_RNZT1IxqlN5F0qnROpZk2SfjmLlXGIWHTB6Gw5Y8&currencies=CAD

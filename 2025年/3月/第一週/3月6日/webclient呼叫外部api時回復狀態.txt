@@ -1,0 +1,34 @@
+webclient呼叫外部api時回復狀態
+
+Autowird
+
+由spring boot管理，
+
+以前是加上autowird
+
+
+
+
+
+try-catch
+在程式執行階段發生錯誤需要返回狀態標示錯誤地方
+
+可能發生的錯誤()
+nullpoint
+
+多種catch(不同錯誤訊息)
+try
+
+catch nullpoint
+
+catch io
+
+null錯誤則執行null
+不會執行io
+
+然後繼續執行其他程式
+
+其他用法
+controller 呼叫service (service不處理，conller處理)
+
+throw 呼叫自訂物件

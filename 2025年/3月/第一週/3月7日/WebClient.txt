@@ -1,0 +1,19 @@
+API URL
+
+
+uri
+已宣告
+
+
+http://localhost:8080/exchange-rate?base=JPY&target=CAD
+
+
+
+https://api.freecurrencyapi.com/v1/latest?
+
+apikey=fca_live_RNZT1IxqlN5F0qnROpZk2SfjmLlXGIWHTB6Gw5Y8&currencies=CAD&base_currency=JPY
+
+
+https://api.freecurrencyapi.com/v1/latest?apikey=fca_live_RNZT1IxqlN5F0qnROpZk2SfjmLlXGIWHTB6Gw5Y8&currencies=CAD&base_currency=JPY
+
+https://api.freecurrencyapi.com/v1/latest&currencies=CAD&base_currency=JPY

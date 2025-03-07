@@ -1,0 +1,5 @@
+程式目的:使用try-catch處理異常情況
+
+atm_card:資料庫儲存卡片帳密/存取款使用try-catch
+moneychange:匯率轉換目前error無法使用swagger-ui
+

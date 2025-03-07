@@ -1,6 +1,6 @@
 例外處理，程式之中
 
-trychecked例外異常處理
+trycheck例外異常處理
 使用時機、用途用法與情境
 
 source file編譯就算成功但執行也可能出錯
@@ -100,3 +100,21 @@ throw new RuntimeException("Database Error: " + e.getMessage());
 避免程式崩潰 使用 
 return 0;
 return "Invalid input";
+
+
+try {
+            return webClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/weather")
+                            .queryParam("q", city)
+                            .queryParam("appid", weatherProperties.getKey())
+                            .queryParam("units", "metric")
+                            .build())
+                    .retrieve()
+                    .bodyToMono(WeatherResponse.class);
+        } catch (Exception e) {
+            logger.error("服務層同步異常，城市: {}", city, e);
+            return Mono.error(new RuntimeException("服務內部錯誤: " + e.getMessage()));
+        }
+
+
+

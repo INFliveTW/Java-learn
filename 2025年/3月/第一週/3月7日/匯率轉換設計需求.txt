@@ -1,0 +1,34 @@
+
+1.使用者輸入幣別(當下執行2.) service
+
+2.先取得所有匯率(不列印給使用者，後台執行)
+https://openexchangerates.org/api/latest.json?app_id=99bb96eec8f4452e9ba3dc2dcc86f052
+
+3.比較幣別屬於哪項 
+(1) USD > XXX
+(2) USD > XXX / XXX > USD
+(3) XXX > XXX (USD比較兩者幣別後)
+4.用美金計匴匯率
+USD 1$ = AED 3$
+USD 1$ = AFN 72$
+那
+AED 1$ = AFN 72$/AED3$
+5.列印使用者所需幣別匯率
+base(來源幣別) 轉換 target(目標幣別)
+
+!如果base為USD則直接列印USD & 幣別匯率
+!反之target為USD則轉換XXX/USD 並列印匯率
+
+取得ALL
+USD > ALL
+USD > XXX / XXX > USD
+XXX > XXX
+
+USD1:3.6AED
+3.6/3.6=1
+AED1:1/3.6USD
+
+USD1
+AED3 :1USD
+AFN72 : 1USD
+72/3=1:?
