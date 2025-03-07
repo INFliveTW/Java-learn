@@ -1,19 +1,32 @@
 
-1.使用者輸入幣別(當下執行2.) service
+1.使用者輸入幣別(當下執行2.)
 
-2.先取得所有匯率(不列印給使用者，後台執行)
+2.先取得所有匯率(不列印給使用者，後台執行) 取得所有幣別與匯率將即時匯率更新到SQL
+
+即時匯率 Repository 包含 U(更新匯率) & NULL(找不到匯率)
+
 https://openexchangerates.org/api/latest.json?app_id=99bb96eec8f4452e9ba3dc2dcc86f052
 
-3.比較幣別屬於哪項 
+3.比較幣別屬於哪項 呼叫  比較幣別service + 撈取指定幣別Repository
 (1) USD > XXX
 (2) USD > XXX / XXX > USD
 (3) XXX > XXX (USD比較兩者幣別後)
-4.用美金計匴匯率
+Switch-case
+如果是[1]
+則...
+[2]
+則...
+[3]
+
+4.用美金計匴匯率  匯率差計算service
 USD 1$ = AED 3$
 USD 1$ = AFN 72$
 那
 AED 1$ = AFN 72$/AED3$
-5.列印使用者所需幣別匯率
+
+5.列印使用者所需幣別匯率  controller返回結果
+列印指定base、target幣別(從repository撈取 sql)與匯率差(service計算完成) 給swagger-ui
+
 base(來源幣別) 轉換 target(目標幣別)
 
 !如果base為USD則直接列印USD & 幣別匯率
