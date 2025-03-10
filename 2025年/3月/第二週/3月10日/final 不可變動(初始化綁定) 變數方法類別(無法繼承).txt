@@ -1,0 +1,14 @@
+final 不可變動(初始化綁定) 變數/方法/類別(無法繼承)
+
+.filter((request, next) -> {
+    return next.exchange(request).doOnNext(response -> {
+        response.bodyToMono(String.class).subscribe(rawBody -> {
+            System.out.println("API Raw Response (Status: " + response.statusCode() + "): " + rawBody);
+        });
+    });
+})
+
+
+response.bodyToMono(String.class).subscribe(rawBody -> {
+
+subscribe 僅一次
