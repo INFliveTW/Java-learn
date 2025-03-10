@@ -18,6 +18,13 @@ public class WebClientConfig {
         return WebClient.builder()
                 .baseUrl(properties.getApiUrl()) // 使用 https://api.currencyfreaks.com/v2.0
                 .defaultHeader("Accept", "application/json")
+                // .filter((request, next) -> {
+                //     return next.exchange(request).doOnNext(response -> {
+                //         response.bodyToMono(String.class).subscribe(rawBody -> {
+                //             System.out.println("API Raw Response (Status: " + response.statusCode() + "): " + rawBody);
+                //         });
+                //     });
+                // })
                 .build();
     }
 }

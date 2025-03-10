@@ -1,0 +1,267 @@
+將此程式的超時處理完全整合在
+ApiTimeoutException.java
+這是目前內容
+介紹JAVA傳統作法與最新做法實例、說明超時處理與錯誤處理
+與
+此程式的超時處理與超時錯誤處理
+
+GlobalExceptionHandler.java
+
+package com.example.moneychangeapi.config;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import com.example.moneychangeapi.model.ErrorMessage;
+
+import reactor.core.publisher.Mono;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(WebClientResponseException.class)
+    public Mono<ResponseEntity<ErrorMessage>> handleWebClientException(WebClientResponseException ex) {
+        HttpStatusCode statusCode = ex.getStatusCode();
+        HttpStatus status = HttpStatus.valueOf(statusCode.value()); // ✅ 轉回 HttpStatus
+
+        String errorMessage;
+
+        if (status.is4xxClientError()) {
+            if (status.value() == 400) {
+                System.out.println();
+                errorMessage = "無效金額/URL無效";
+            } else if (status.value() == 404) {
+                System.out.println("404錯誤訊息");
+                errorMessage = "找不到必須的URL";
+            } else if (status.value() == 401) {
+                errorMessage = "API KEY 無效/非活躍";
+            } else if (status.value() == 500) {
+                errorMessage = "伺服器內部錯誤，請聯繫管理員";
+            } else {
+                errorMessage = "客戶端錯誤: " + status.value();
+            }
+        } else if (status.is5xxServerError()) {
+            errorMessage = "伺服器錯誤，請稍後再試";
+        } else {
+            errorMessage = "發生未預期的錯誤，請聯繫管理員";
+        }
+        System.out.println("錯誤訊息st: " + status);
+        System.out.println("錯誤訊息stv: " + status.value());
+        ErrorMessage error = new ErrorMessage(status.value(), errorMessage);
+        
+        System.out.println("錯誤訊息: " + error);
+        return Mono.just(ResponseEntity.status(status).body(error));
+    }
+}
+
+
+
+MoneyChangeapiProperties.java
+
+package com.example.moneychangeapi.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import lombok.Data;
+
+@Data // Lombok 提供的 @Data 注解，自動生成 getter/setter 等方法
+@Component // 添加此注解使其成為 Spring Bean
+@ConfigurationProperties(prefix = "moneychangeapi")
+public class MoneyChangeapiProperties {
+    private String apiUrl;
+    private String apiKey;
+    private int connectTimeout;
+    private int readTimeout;
+}
+
+WebClientConfig.java
+
+package com.example.moneychangeapi.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Configuration //提供@Bean方法，Spring Boot會自動掃描
+public class WebClientConfig {
+
+    private final MoneyChangeapiProperties properties;
+
+    public WebClientConfig(MoneyChangeapiProperties properties) {
+        this.properties = properties;
+    }
+
+    @Bean // 標記返回物件為Bean，Spring Boot管理
+    public WebClient webClient() {
+        return WebClient.builder()
+                .baseUrl(properties.getApiUrl()) // 使用 https://api.currencyfreaks.com/v2.0
+                .defaultHeader("Accept", "application/json")
+                .build();
+    }
+}
+
+ExchangeRateController.java
+
+package com.example.moneychangeapi.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.moneychangeapi.service.ExchangeRateService;
+
+import reactor.core.publisher.Mono;
+
+@RestController
+public class ExchangeRateController {
+
+    private final ExchangeRateService service;
+
+    public ExchangeRateController(ExchangeRateService service) {
+        this.service = service;
+    }
+
+    @GetMapping("/exchange-rate")
+    public Mono<String> getExchangeRate( //來源貨幣FROMCURRENCYCODE、目標貨幣TOCURRENCYCODE、轉換金額(來源>目標)AMOUNT
+            @RequestParam(name = "FROM") String fromCurrency,
+            @RequestParam(name = "TO") String toCurrency,
+            @RequestParam(name = "AMOUNT", defaultValue = "1") double amount) {
+        return service.getExchangeRate(fromCurrency, toCurrency, amount)
+                .map(result -> String.format("從(%s)幣別 %.2f$ = 轉換為(%s)幣別 %.2f$", fromCurrency, amount, toCurrency, result));
+    }
+    //http://localhost:8080/exchange-rate?FROM=jpy&TO=twd&AMOUNT=1000
+}
+//@Controller 和 @ResponseBody，表示類處理 REST 請求並返回資料
+
+
+ApiTimeoutException.java
+
+package com.example.moneychangeapi.exception;
+ //超時例外
+public class ApiTimeoutException extends RuntimeException {
+    public ApiTimeoutException(String message) {
+        super(message);
+    }
+}
+
+
+ConvertResponse.java
+
+package com.example.moneychangeapi.model;
+
+import lombok.Data;
+
+@Data
+public class ConvertResponse {
+    private Query query; //貨幣兌換查詢
+    private Conversion conversion;
+
+    @Data
+    public static class Query {
+        private double amount;
+        private String from;
+        private String to;
+    }
+
+    @Data
+    public static class Conversion { //貨幣兌換結果
+        private Double result;
+    }
+}
+
+ErrorMessage.java
+
+package com.example.moneychangeapi.model;
+
+import lombok.Data;
+
+@Data
+public class ErrorMessage {
+    private int status;
+    private String message;
+    public ErrorMessage(int status, String message) {
+        this.status = status; //this... = private int status; 後 = int ...
+        this.message = message;
+    }
+    // public ErrorMessage(int value, String errorMessage) {
+    //     throw new UnsupportedOperationException("Not supported yet.");
+    // }
+}
+
+
+ExchangeRateService.java
+
+package com.example.moneychangeapi.service;
+
+import org.slf4j.Logger; // 導入 SLF4J 的日誌介面，用於記錄日誌。
+import org.slf4j.LoggerFactory; // 導入日誌工廠，用於創建 Logger 實例。
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.example.moneychangeapi.config.MoneyChangeapiProperties;
+import com.fasterxml.jackson.databind.JsonNode;
+
+import reactor.core.publisher.Mono;
+
+@Service
+public class ExchangeRateService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExchangeRateService.class);
+    //記錄錯誤時使用
+    //Web用於呼叫API
+    private final WebClient webClient;
+    private final MoneyChangeapiProperties properties;
+    //Money...提供apikey配置
+    public ExchangeRateService(WebClient webClient, MoneyChangeapiProperties properties) {
+        this.webClient = webClient;
+        this.properties = properties;
+    }
+    //透過建構子注入@Autowired
+    //與 WebClientConfig 和 MoneyChangeapiProperties 的 @Bean 和 @Component關聯
+    
+    public Mono<Double> getExchangeRate(String fromCurrency, String toCurrency, double amount) {
+        //公開方式，讓Controller呼叫、Mono返回轉換金額
+        //被 ExchangeRateController 的 getExchangeRate 呼叫
+
+        return webClient.get()
+                .uri(uriBuilder -> {
+                    //.url() Lambda表達式，queryParam 相關
+                    java.net.URI uri = uriBuilder
+                    //提供最終api的url
+                            .path("/convert/latest")
+                            //與baseUrl組合
+                            //添加鍵值 URL ?以後 key=value 格式 ，分隔以&為使用
+                            //FORM=USD&TO=EUR&AMOUNT=1
+                            //來源貨幣=USD，目標貨幣=EUR，金額=1(1USD > ? EUR)
+                            .queryParam("apikey", properties.getApiKey())
+                            .queryParam("from", fromCurrency)
+                            .queryParam("to", toCurrency)
+                            .queryParam("amount", amount)
+                            .build();
+                    logger.info("API Request URL: {}", uri.toString());
+                    return uri; //將url返回給.uri()
+                })
+                .retrieve() //觸發API呼叫
+                .bodyToMono(JsonNode.class) // 原有邏輯不變
+                .map(json -> { // 原有邏輯不變
+                    logger.info("API Response: {}", json.toString());
+                    return json.get("convertedAmount").asDouble();
+                });
+                    //     JsonNode convertedAmountNode = json.get("convertedAmount");
+                //     if (convertedAmountNode == null || convertedAmountNode.isNull()) {
+                //         throw new RuntimeException("API 回應無效，無法獲取轉換結果: " + json.toString());
+                //     }
+                //     return convertedAmountNode.asDouble();
+                // }) // 處理 API 回應錯誤
+                // .onErrorResume(WebClientResponseException.class, ex -> {
+                //     logger.error("API Error: {}", ex.getResponseBodyAsString());
+                //     return Mono.error(new RuntimeException("API 呼叫失敗: " + ex.getResponseBodyAsString()));
+                // })
+                // .onErrorMap(ex -> new RuntimeException("API 處理失敗: " + ex.getMessage()));
+    }
+}

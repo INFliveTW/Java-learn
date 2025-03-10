@@ -1,0 +1,18 @@
+https://openexchangerates.org/api/convert/{value}/{base}/{target}
+這是api的正確網址，但不知道value是甚麼內容
+
+這是swagger-ui
+http://localhost:8080/exchange-rate?base=JPY&target=CAD
+base是JPY
+target是CAD
+
+這是application.yml
+moneychangeapi:
+  # api-url: "https://api.freecurrencyapi.com/v1"
+  api-url: "https://openexchangerates.org/api"
+  # api-key: "fca_live_RNZT1IxqlN5F0qnROpZk2SfjmLlXGIWHTB6Gw5Y8"
+  api-key: "99bb96eec8f4452e9ba3dc2dcc86f052"
+
+因需求幫我新增base的指定 value（金額）的地方以符合新需求
+一樣是透過獲取所有匯率並使用新的匯率換算指定金額的幣值匯率
+例如

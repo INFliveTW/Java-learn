@@ -1,0 +1,37 @@
+controller -> amount之後
+
+try{
+service getExchangeRate(,,,),
+
+{catch(WebClientResponse(Excption e))
+if (e.get statuscode() == 400{
+return;
+}
+
+
+{catch (Exception e)
+
+
+handler & exception
+
+
+
+
+
+
+
+
+try-catch
+try { //使用try-catch處理例外異常
+            return webClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/weather")
+                            .queryParam("q", city)
+                            .queryParam("appid", weatherProperties.getKey())
+                            .queryParam("units", "metric")
+                            .build())
+                    .retrieve()
+                    .bodyToMono(WeatherResponse.class);
+        } catch (Exception e) {
+            logger.error("發生非預期的異常，城市: {}", city, e);
+            return Mono.error(new RuntimeException("發生預期外錯誤，請找管理員: " + e.getMessage()));
+        }

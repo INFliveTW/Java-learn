@@ -1,0 +1,28 @@
+超時處理
+指定時間未完成，觸發"超時"
+
+傳統: 使用Thread.sleep()或java.util.Timer手動計時(時間到中斷)
+
+Thread thread = new Thread(() -> {
+    try {
+        Thread.sleep(5000); // 模擬長時間操作
+        System.out.println("完成");
+    } catch (InterruptedException e) {
+        System.out.println("超時中斷");
+    }
+});
+thread.start();
+Thread.sleep(2000);
+thread.interrupt();
+
+
+
+自定義異常類
+ApiTimeoutException.java
+
+在WebClientConfig、ExchangeRateService、GlobalExceptionHandler中呼叫此類
+
+繼承RuntimeException，在Reactive流程拋出
+
+WebClient配置 HTTP 客戶端超時
+ExchangeRateService使用 .timeout() 轉換為 ApiTimeoutException
