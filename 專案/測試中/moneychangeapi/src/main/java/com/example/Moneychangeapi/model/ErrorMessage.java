@@ -1,9 +1,9 @@
 package com.example.Moneychangeapi.model;
 
-import lombok.Data;
+import lombok.Value;
 
-@Data
+@Value
 public class ErrorMessage {
-    private final int status;
-    private final String message;
+    int status;
+    String message;
 }

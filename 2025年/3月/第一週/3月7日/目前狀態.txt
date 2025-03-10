@@ -18,3 +18,10 @@ APL獲取所有匯率
 API KEY網站
 
 https://app.exchangerate-api.com/dashboard
+
+  # api-url: "https://api.freecurrencyapi.com/v1"
+  # api-url: "https://openexchangerates.org/api"
+    # api-key: "fca_live_RNZT1IxqlN5F0qnROpZk2SfjmLlXGIWHTB6Gw5Y8"
+  # api-key: "99bb96eec8f4452e9ba3dc2dcc86f052"
+
+http://localhost:8080/exchange-rate?FROMCURRENCYCODE=xxx&TOCURRENCYCODE=twd&AMOUNT=1

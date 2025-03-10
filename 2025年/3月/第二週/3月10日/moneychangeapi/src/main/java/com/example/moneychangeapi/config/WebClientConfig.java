@@ -1,10 +1,10 @@
-package com.example.Moneychangeapi.config;
+package com.example.moneychangeapi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@Configuration
+@Configuration //提供@Bean方法，Spring Boot會自動掃描
 public class WebClientConfig {
 
     private final MoneyChangeapiProperties properties;
@@ -13,11 +13,12 @@ public class WebClientConfig {
         this.properties = properties;
     }
 
-    @Bean
+    @Bean // 標記返回物件為Bean，Spring Boot管理
     public WebClient webClient() {
         return WebClient.builder()
-                .baseUrl(properties.getApiUrl())
-                .defaultHeader("app_id", properties.getApiKey())
+                .baseUrl(properties.getApiUrl()) // 使用 https://api.currencyfreaks.com/v2.0
+                .defaultHeader("Accept", "application/json")
                 .build();
     }
 }
+

@@ -1,0 +1,47 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.3'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '21'
+
+dependencies {
+    // Spring Boot WebFlux（由 BOM 管理版本）
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Springdoc OpenAPI
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+
+    // 配置處理器
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+    // 測試依賴
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
+
+    // 強制使用與 Spring Boot 3.2.3 兼容的 Reactor Netty 版本
+    // implementation 'io.projectreactor.netty:reactor-netty-http:1.2.3'
+    // implementation 'io.projectreactor.netty:reactor-netty-core:1.2.3'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.boot:spring-boot-dependencies:3.2.3'
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+// 清理緩存的任務
+task cleanCache(type: Delete) {
+    delete fileTree(dir: "${rootDir}/.gradle")
+}

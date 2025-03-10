@@ -2,20 +2,10 @@ package com.example.Moneychangeapi.model;
 
 import java.util.Map;
 
+import lombok.Data;
+
+@Data
 public class MoneychangeapiResponse {
     private String base;
-    private Map<String, Double> conversion_rates;
-
-    public String getBase() {
-        return base;
-    }
-
-    public Map<String, Double> getConversionRates() {
-        return conversion_rates;
-    }
-
-    @Override
-    public String toString() {
-        return "MoneychangeapiResponse [base=" + base + ", conversion_rates=" + conversion_rates + "]";
-    }
+    private Map<String, Double> rates; // 修正為與 API 一致的字段名稱
 }

@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+moneychangeapi:
+  api-url: "https://api.currencyfreaks.com/v2.0"
+  api-key: "4870617b331c498c8ad43b78ce86c1ab"
+  connect-timeout: 5000
+  read-timeout: 5000
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
