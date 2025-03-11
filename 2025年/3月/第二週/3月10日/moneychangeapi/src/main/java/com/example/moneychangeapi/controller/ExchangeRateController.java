@@ -1,5 +1,4 @@
 package com.example.moneychangeapi.controller;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,8 +22,17 @@ public class ExchangeRateController {
             @RequestParam(name = "TO") String toCurrency,
             @RequestParam(name = "AMOUNT", defaultValue = "1") double amount) {
         return service.getExchangeRate(fromCurrency, toCurrency, amount)
-                .map(result -> String.format("從(%s)幣別 %.2f$ = 轉換為(%s)幣別 %.2f$", fromCurrency, amount, toCurrency, result));
+                //.map(result -> String.format("從(%s)幣別 %.2f$ = 轉換為(%s)幣別 %.2f$", fromCurrency, amount, toCurrency, result));
+                .map(result -> {
+                    if (result.getStatus() == 200) {
+                        double convertedAmount = Double.parseDouble(result.getMessage());
+                        return String.format("從(%s)幣別 %.2f$ = 轉換為(%s)幣別 %.2f$", 
+                                fromCurrency, amount, toCurrency, convertedAmount);
+                    } else {
+                        return result.getMessage(); // 返回自訂的錯誤訊息
+                    }
+                });
     }
-    //http://localhost:8080/exchange-rate?FROM=jpy&TO=twd&AMOUNT=1000
 }
+//http://localhost:8080/exchange-rate?FROM=jpy&TO=twd&AMOUNT=1000
 //@Controller 和 @ResponseBody，表示類處理 REST 請求並返回資料

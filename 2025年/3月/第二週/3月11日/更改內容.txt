@@ -1,0 +1,121 @@
+更改內容
+3月10日匯率轉換程式
+
+檢查FROM & TO 是否均為英文 true-false比較 OK service
+單獨偵測FROM、TO 或是兩者均非英文情況
+檢查FROM & TO 幣值是否存在 true-false比較 OK service
+同樣單獨偵測FROM與TO，或兩者，只要不存在則顯示所有支援幣值
+
+計算匯率 OK service
+從{FROM} = 指定金額 > 轉換為{TO} = 匯率*指定金額(結果)
+
+錯誤處理從GlobalExceptionHandler
+改為ExchangeRateService 使用try-catch OK service
+使用if，捕捉回傳指定訊息後完成 等待測試(寫好了尚未測試)
+
+
+
+目標：檢查輸入字元是否為英文 完成
+ＦＲＯＭ：檢查所有字元是否均為英文 完成
+ＴＯ：如否，則顯示錯誤訊息 完成
+
+檢查輸入字元是否均存在 完成
+使用 https://api.currencyfreaks.com/v2.0/currency-symbols 訪問支援的貨幣符號
+如果為真則繼續
+如果為非則顯示錯誤訊息(請輸入正確的貨幣符號，並顯示所有支援的貨幣符號(三字元的那個))
+
+將GlobalExceptionHandler修改為service的try-catch並使用if為替代(偵測到惟該巷時顯示錯誤訊息並return)
+
+
+Controller
+//.map(result -> String.format("從(%s)幣別 %.2f$ = 轉換為(%s)幣別 %.2f$", fromCurrency, amount, toCurrency, result));
+修改為
+
+.map(result -> {
+                    if (result.getStatus() == 200) {
+                        double convertedAmount = Double.parseDouble(result.getMessage());
+                        return String.format("從(%s)幣別 %.2f$ = 轉換為(%s)幣別 %.2f$", 
+                                fromCurrency, amount, toCurrency, convertedAmount);
+                    } else {
+                        return result.getMessage(); // 返回自訂的錯誤訊息
+                    }
+
+
+service
+
+ private boolean isAllLetters(String word) {
+        for (int i = 0; i < word.length(); i++) {
+            if (!Character.isLetter(word.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+
+public Mono<ErrorMessage> getExchangeRate(String fromCurrency, String toCurrency, double amount) {  
+
+Mono的<Double> 更改為 ErrorMessage
+
+if (!isAllLetters(fromCurrency) || !isAllLetters(toCurrency)) {
+            String errorMessage = "貨幣代碼必須為英文字母";
+            logger.error("輸入字元中有非英文: from={}, to={}", fromCurrency, toCurrency);
+            return Mono.just(new ErrorMessage(400, errorMessage));
+        }
+
+--------------------------------------
+!isAllLetters(fromCurrency)：如果 fromCurrency 含非字母，返回 true。
+!isAllLetters(toCurrency)：如果 toCurrency 含非字母，返回 true。
+||（或運算）：只要任一條件為 true，就進入 if 塊。
+Mono.just 表示成功發送一個值（這裡是 ErrorMessage），而不是拋出異常，避免觸發全局異常處理器。
+--------------------------------------
+
+在
+return webClient.get()
+之前新增 
+try {
+
+
+最後新增
+} catch (WebClientResponseException e) {
+            String errorMessage = null;
+            int statusValue = e.getStatusCode().value();
+            System.err.println("response: " + e.getResponseBodyAsString());
+
+            if (statusValue == 400) {
+                errorMessage = "無效金額/URL無效";
+                logger.error("400 Error: {}", errorMessage);
+                return Mono.just(new ErrorMessage(statusValue, errorMessage));
+            }
+
+--------------------------------------
+處理WebClient在API呼叫時拋出的HTTP異常
+WebClientResponseException收到非2xx回應時拋出異常(4xx、5xx)
+e.getStatusCode()返回HTTP狀態
+Mono.just 表示成功發送一個值（這裡是 ErrorMessage），狀態編號 & 自訂訊息。
+
+--------------------------------------
+
+            errorMessage = "發生未預期的錯誤，請聯繫管理員";
+            logger.error("Unexpected Error (status={}): {}", statusValue, errorMessage);
+            return Mono.just(new ErrorMessage(statusValue, errorMessage));
+        } catch (Exception e) {
+            String errorMessage = "系統異常: " + e.getMessage();
+            logger.error("System Exception: {}", errorMessage, e);
+            return Mono.just(new ErrorMessage(500, errorMessage));
+        }
+
+--------------------------------------
+Mono.error 會拋出異常，可能被 GlobalExceptionHandler 捕獲並覆蓋自訂訊息。
+Mono.just 將錯誤作為正常資料處理，確保自訂訊息保留。
+--------------------------------------
+
+
+
+
+Service 層：
+使用 isAllLetters 驗證輸入。
+使用 try-catch 處理 API 呼叫。
+返回 Mono<ErrorMessage>，統一成功和錯誤的結果。
+Controller 層：
+接收 Mono<ErrorMessage>，根據 statusValue 決定輸出格式（成功格式化為字串，錯誤直接返回訊息）。
