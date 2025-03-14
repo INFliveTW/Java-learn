@@ -1,0 +1,45 @@
+●  測試工具進階
+> 實作單元測試與整合測試（JUnit）
+> 使用 Mock 框架模擬外部 API 請求（如 WebTestClient 或 WireMock）
+
+1. 實作單元測試與整合測試（JUnit）
+
+JUnit 單元測試框架
+
+單元:單個類別/方法行為，不使用外部依賴(資料庫/API)
+
+驗證邏輯正確性
+搭配Mock框架(Mockito)
+不涉及外部系統/模擬物件(Mock)隔離依賴
+
+@Test:標記要測試的方法
+@BeforeEach/@AfterEach: 測試前/後設置或清理
+@BeforeAll / @AfterAll：所有測試前/後各執行一次
+
+
+整合:多個組件交互(外部API呼叫/資料庫存取)
+驗證API與服務協作是否正確
+搭配SpringBootTest/Swagger-UI
+執行較慢(呼叫外部)/真實流程
+@SpringBootTest:啟動完整的 Spring 應用上下文。
+@AutoConfigureWebTestClient:配置測試的 WebTestClient
+
+
+使用Mock框架模擬外部API請求
+WebTestClient (Spring測試工具 > 測試WebFlux或WebMVC)
+模擬HTTP請求/回應 無須啟動SERVER
+
+模擬外部API需要WebClient : 支援非同步測試
+
+WireMock
+
+JUnit + Mockito
+Service邏輯測試 WebClient & WebClientUtil行為
+工具: JUnit 5 + Mockito
+
+@Mock
+
+when(...)
+
+thenReturn(...)
+

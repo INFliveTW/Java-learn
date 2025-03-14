@@ -25,18 +25,19 @@ public class WebClientUtil {
      * @param paramsConfigurer 根據 requestParams 配置查詢參數的 Consumer
      * @return WebClient.RequestHeadersSpec<?>，待進一步處理的請求物件
      */
-    public WebClient.RequestHeadersSpec<?> buildRequest(
-            String path,
-            Object requestParams,
-            Consumer<UriBuilder> paramsConfigurer) {
-        return webClient.get()
-                .uri(uriBuilder -> {
-                    uriBuilder.path(path);              // 設置 API 路徑
-                    uriBuilder.queryParam("apikey", apiKey); // 通用參數：apiKey
-                    paramsConfigurer.accept(uriBuilder);     // 動態設置其他參數
-                    URI uri = uriBuilder.build();
-                    logger.info("API Request URL: {}", uri.toString());
-                    return uri;
+
+     public WebClient.RequestHeadersSpec<?> buildRequest(
+        String path,
+        Object requestParams,
+        Consumer<UriBuilder> paramsConfigurer) {
+    return webClient.get()
+            .uri(uriBuilder -> {
+                uriBuilder.path(path);              // 設置 API 路徑
+                uriBuilder.queryParam("apikey", apiKey); // 通用參數：apiKey
+                paramsConfigurer.accept(uriBuilder);     // 動態設置其他參數
+                URI uri = uriBuilder.build();
+                logger.info("API Request URL: {}", uri.toString());
+                return uri;
                 });
     }
 }

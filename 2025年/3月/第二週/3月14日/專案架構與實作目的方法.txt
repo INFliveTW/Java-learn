@@ -1,0 +1,78 @@
+專案架構與實作目的/方法
+scheduler
+
+csv 程式結構 sftp
+
+
+csv
+員編(ID) | 部門(DEPARTMENT) | 職稱(JOB TITLE) | 姓名(NAME) | 電話(TEL) | 電子郵箱(EMAIL)
+
+SQL 內公司(隨機) | 時間戳記(API寫入時間)
+金控/銀行/證券						   
+
+SQL
+
+ID | DEPARTMENT | JOB TITLE | NAME | TEL | EMAIL | COMPANY(REDOM) | TIME |
+
+
+config >
+
+controller >
+
+service > impl >
+
+model >
+
+resources >
+application.yml
+
+
+
+
+
+@Post...("/自訂網址")
+public Mono<String> getExchangeRate(參數)
+@RequestParam
+
+
+controller
+
+
+config
+WebClientConfig
+
+service
+//當API被呼叫時
+會將company欄位隨機填入
+"金控","銀行","證券" 其中一個
+
+
+
+application.yml
+//排程每5秒
+scheduler呼叫外部API
+該API去讀取"sftp"的csv內容
+將內容寫入ms sql
+
+//設定api url
+專案名稱:
+  api-url: "url"
+
+timeout(3)
+在WebClientConfig指定timeout邏輯
+
+讀取yml的timeout time
+connect-timeout: 3000
+read-timeout: 3000
+
+----------------
+server:
+  port:8080
+
+name:
+ api-url: ""
+ connect-timeout: 3000
+ read-timeout:3000
+
+----------------
+

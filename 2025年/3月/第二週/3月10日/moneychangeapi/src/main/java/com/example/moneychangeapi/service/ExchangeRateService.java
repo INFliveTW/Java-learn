@@ -1,5 +1,6 @@
 package com.example.moneychangeapi.service;
 
+//import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,7 +59,7 @@ public class ExchangeRateService {
                 })
                 .onErrorResume(e -> {
                     logger.error("not support: {}", e.getMessage());
-                    return Mono.error(new RuntimeException("API 請求失敗: " + e.getMessage()));
+                    return Mono.error(new RuntimeException("因超時導致失敗，請確認API運行狀態")); // + e.getMessage()
                 });
     }
 
@@ -93,39 +94,9 @@ public class ExchangeRateService {
         }
     
         // 直接根據空值判斷錯誤訊息
-        if (!fromError.equals(" ") && !toError.equals(" ")) {
-            String errorMessage = String.format("\"%s\" \"%s\" FROM & TO 貨幣代碼必須均為英文字母", fromCurrency, toCurrency);
-            logger.error("輸入字元中有非英文: from={}, to={}", fromCurrency, toCurrency);
-            return Mono.just(new ErrorMessage(400, errorMessage));
-        }
-        if (!fromError.equals(" ") && toError.equals(" ")) {
-            String errorMessage = String.format("\"%s\" FROM貨幣代碼必須為英文字母", fromCurrency);
-            logger.error("輸入字元中有非英文: from={}", fromCurrency);
-            return Mono.just(new ErrorMessage(400, errorMessage));
-        }
-        if (fromError.equals(" ") && !toError.equals(" ")) {
-            String errorMessage = String.format("\"%s\" TO貨幣代碼必須為英文字母", toCurrency);
-            logger.error("輸入字元中有非英文: from={}", toCurrency);
-            return Mono.just(new ErrorMessage(400, errorMessage));
-        }
+            
 
-    // public Mono<ErrorMessage> getExchangeRate(String fromCurrency, String toCurrency, double amount) {
-    //     if (!isAllLetters(fromCurrency)) {
-    //         String errorMessage = String.format("\"%s\" FROM貨幣代碼必須為英文字母", fromCurrency);
-    //         logger.error("輸入字元中有非英文: from={}", fromCurrency);
-    //         return Mono.just(new ErrorMessage(400, errorMessage));
-    //     }
-    //     if (!isAllLetters(toCurrency)) {
-    //         String errorMessage = String.format("\"%s\" TO貨幣代碼必須為英文字母", toCurrency);
-    //         logger.error("輸入字元中有非英文: to={}", toCurrency);
-    //         return Mono.just(new ErrorMessage(400, errorMessage));
-    //     }
-    //     if (!isAllLetters(fromCurrency) && !isAllLetters(toCurrency)) {
-    //         String errorMessage = String.format("\"%s\" \"%s\" FT貨幣代碼必須為英文字母", fromCurrency, toCurrency);
-    //         logger.error("輸入字元中有非英文: from={}, to={}", fromCurrency, toCurrency);
-    //         return Mono.just(new ErrorMessage(400, errorMessage));
-    //     }
-
+    
     // 檢查貨幣是否存在
     return getSupportedCurrencies()
                 .flatMap(supportedCurrencies -> {
@@ -160,41 +131,17 @@ public class ExchangeRateService {
                         logger.error("貨幣不存在: to={}", toExistsError);
                         return Mono.just(new ErrorMessage(400, errorMessage));
                     }
-        // return getSupportedCurrencies()
-        //         .flatMap(supportedCurrencies -> {
-        //             boolean fromExists = supportedCurrencies.contains(fromCurrency.toUpperCase());
-        //             boolean toExists = supportedCurrencies.contains(toCurrency.toUpperCase());
-        //             String supportedCurrenciesStr = String.join("\", \"", supportedCurrencies);
-
-        //             if (!fromExists && toExists) {
-        //                 String errorMessage = String.format("\"%s\" 貨幣符號不存在，請確認貨幣再重新嘗試\n支援的貨幣符號: \"%s\"",
-        //                         fromCurrency, supportedCurrenciesStr);
-        //                 logger.error("貨幣不存在: from={}", fromCurrency);
-        //                 return Mono.just(new ErrorMessage(400, errorMessage));
-        //             }
-        //             if (fromExists && !toExists) {
-        //                 String errorMessage = String.format("\"%s\" 貨幣符號不存在，請確認貨幣再重新嘗試\n支援的貨幣符號: \"%s\"",
-        //                         toCurrency, supportedCurrenciesStr);
-        //                 logger.error("貨幣不存在: to={}", toCurrency);
-        //                 return Mono.just(new ErrorMessage(400, errorMessage));
-        //             }
-        //             if (!fromExists && !toExists) {
-        //                 String errorMessage = String.format("\"%s\" \"%s\" 貨幣符號均不存在，請確認貨幣再重新嘗試\n支援的貨幣符號: \"%s\"",
-        //                         fromCurrency, toCurrency, supportedCurrenciesStr);
-        //                 logger.error("貨幣不存在: from={}, to={}", fromCurrency, toCurrency);
-        //                 return Mono.just(new ErrorMessage(400, errorMessage));
-        //             }
-
+        
                     try {
                         CurrencyRequest request = new CurrencyRequest(fromCurrency, toCurrency, amount);
-                        return webClientUtil.buildRequest(
-                                "/convert/latest", // String url
-                                request,           // Object request
-                                uriBuilder -> {    // 配置查詢參數
-                                    CurrencyRequest req = (CurrencyRequest) request;
-                                    uriBuilder
-                                            .queryParam("from", req.fromCurrency)
-                                            .queryParam("to", req.toCurrency)
+                              return webClientUtil.buildRequest(
+                                  "/convert/latest", // String url
+                                   request,           // Object request
+                                   uriBuilder -> {    // 配置查詢參數
+                                         CurrencyRequest req = (CurrencyRequest) request;
+                                         uriBuilder
+                                             .queryParam("from", req.fromCurrency)
+                                             .queryParam("to", req.toCurrency)
                                             .queryParam("amount", req.amount);
                                 }
                         ).retrieve()
@@ -231,8 +178,9 @@ public class ExchangeRateService {
                         logger.error("System Exception: {}", errorMessage, e);
                         return Mono.just(new ErrorMessage(500, errorMessage));
                     }
-                }).onErrorResume(e -> {
-                    String errorMessage = "API 請求失敗: " + e.getMessage();
+                })
+                .onErrorResume(e -> { 
+                    String errorMessage = "API 請求失敗：";// + e.getMessage();
                     logger.error("API Error: {}", errorMessage);
                     return Mono.just(new ErrorMessage(500, errorMessage));
                 });

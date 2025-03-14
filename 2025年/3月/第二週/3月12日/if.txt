@@ -12,3 +12,19 @@ if !(to) 偵測 //to
 
 if !(如果兩者均非英文)
 兩者"" "" 非空值
+
+retry repeat
+
+封裝類 WebClientUtil：應該獨立出來，放在專門的工具包中，例如 com.example.moneychangeapi.util。這是一個通用的工具類，可以被其他服務類重用。
+
+
+com.example.moneychangeapi.util.WebClientUtil.java
+
+
+
+
+
+
+
+
+

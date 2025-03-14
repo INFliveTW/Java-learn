@@ -1,0 +1,32 @@
+return webClientUtil.getRequest(
+                "/v2.0/currency-symbols",
+                uriBuilder -> {},
+                JsonNode.class
+        ).timeout(Duration.ofMillis(100))
+         .map(json -> {
+             JsonNode currencySymbols = json.get("currencySymbols");
+             List<String> supportedCurrencies = new ArrayList<>();
+             currencySymbols.fieldNames().forEachRemaining(supportedCurrencies::add);
+             return supportedCurrencies;
+         })
+         .onErrorResume(e -> {
+             logger.error("not support: {}", e.getMessage());
+             return Mono.error(new RuntimeException("API 請求失敗: " + e.getMessage()));
+         });
+
+
+
+
+try {
+                        return webClientUtil.getRequest(
+                                "/convert/latest",
+                                uriBuilder -> uriBuilder
+                                        .queryParam("apikey", properties.getApiKey())
+                                        .queryParam("from", fromCurrency)
+                                        .queryParam("to", toCurrency)
+                                        .queryParam("amount", amount),
+                                JsonNode.class
+                        ).map(json -> {
+                            double result = json.get("convertedAmount").asDouble();
+                            return new ErrorMessage(200, String.valueOf(result));
+                        });
