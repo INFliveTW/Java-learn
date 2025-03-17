@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: training-svc-data-transfer
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDB;encrypt=false
+    username: sa
+    password: 1QAZ2WSX3EDc4@
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+      ddl-auto: update       # 自動更新資料庫結構（開發用，生產環境建議設為 none）
+    show-sql: true           # 顯示 SQL 語句，方便調試
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect  # 指定 MS SQL 方言
+
+server:
+  port: 8081               # API 服務運行在 8081 埠
+
+sftp:
+  host: localhost
+  port: 2222
+  username: sa
+  password: 1QAZ2WSX3EDc4@
+  remote-dir: /upload      # SFTP 上存放 CSV 的目錄
+
+logging:
+  level:
+    root: INFO
+    cdf.training.svc.datatransfer: DEBUG  # 自訂包的日誌級別

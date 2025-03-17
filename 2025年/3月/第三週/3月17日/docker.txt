@@ -1,0 +1,41 @@
+docker
+
+ms sql
+網路類型：Mocrosoft SQL Server（TCP/IP）
+函式庫：MSOLEDBSQL
+主機：localhost
+連接埠：1433
+使用者：sa
+密碼：1QAZ2WSX3EDc4@
+
+運行docker 安裝ms sql
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=1QAZ2WSX3EDc4@" -p 1433:1433 --name mssql-training-bch-scheduler -v mssql-data:/var/opt/mssql -d mcr.microsoft.com/mssql/server:2022-latest
+
+docker sftp
+協定：SFTP - SSH File Transfer Protocol
+主機：localhost
+連接埠：2222
+登入型式：一般
+使用者：sa
+密碼：1QAZ2WSX3EDc4@
+
+運行docker 安裝sftp
+docker run -p 2222:22 --name sftp-training-bch-scheduler -v sftp-data:/home/testuser/upload -d atmoz/sftp testuser:testpass:1001
+
+調整權限(讓sa有寫入權限，而非僅有讀取) 更改擁有者為 sa（UID 1001）
+docker exec sftp-training-bch-scheduler chown 1001:1001 /home/testuser/upload
+
+775 表示擁有者和群組有讀寫執行權限，其他人有讀和執行權限。
+docker exec sftp-training-bch-scheduler chmod 775 /home/testuser/upload
+
+檢查是否更改
+docker exec sftp-training-bch-scheduler ls -ld /home/testuser/upload
+
+應顯示
+drwxrwxr-x 2 1001 1001 4096 Mar 17 05:51 /home/testuser/upload
+
+
+將csv檔案上傳至
+/home/sa/upload
+
+employee_data_sftp.csv

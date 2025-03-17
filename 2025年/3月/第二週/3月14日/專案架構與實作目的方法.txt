@@ -16,17 +16,33 @@ ID | DEPARTMENT | JOB TITLE | NAME | TEL | EMAIL | COMPANY(REDOM) | TIME |
 
 
 config >
+GlobalExceptionHandler 異常處理
+APIProperties
+WebClientConfig 
 
 controller >
+ExchangeRateController
+@POST...("/顯示")
+參數與執行結果
 
 service > impl >
+ExchngeRateServiceImpl
+//當API被呼叫時
+1.讀取SFTP的csv內容寫入sql
+
+2.會將company欄位隨機填入
+"金控","銀行","證券" 其中一個
+POST
+
 
 model >
+ErrorMessage
 
 resources >
 application.yml
-
-
+//設定
+timeout(3 sec，application.yml)
+timeout時顯示"回覆時間過長，請稍後再試！"
 
 
 
@@ -42,9 +58,7 @@ config
 WebClientConfig
 
 service
-//當API被呼叫時
-會將company欄位隨機填入
-"金控","銀行","證券" 其中一個
+
 
 
 
@@ -76,3 +90,17 @@ name:
 
 ----------------
 
+1. 用spring boot 3.X
+2. 實作一個scheduler
+定期呼叫外部API
+可設定排程時間(5 sec)(application.yml)
+可設定一組API url(application.yml)
+使用webclient，設定timeout(3 sec，application.yml)
+timeout時顯示"回覆時間過長，請稍後再試！"
+company為"金控"、"銀行"、"證券"
+3. 實作一個API，將sftp的檔案內容寫入MS SQL
+用docker運行sftp server
+sftp server存放一個測試用的csv
+DB table欄位設計與csv一致，另外多一個excute_time(yyyy-mm-dd HH:MM:SS)
+當API被呼叫時，讀取sftp的csv，並將csv內容寫入DB
+API用POST，body格式為{"company" : XXX, "excute_time": "2025-3-14 15:31:02"}

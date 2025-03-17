@@ -1,0 +1,34 @@
+api package
+
+設定一組API url - application.yml
+
+company為"金控"、"銀行"、"證券" - service DatabaseServiceImpl
+
+training-svc-data-transfer/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/training/svc/datatransfer/
+│   │   │       ├── DatatransferApplication   # 主應用程式啟動類
+│   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── SFTPConfig           # SFTP 客戶端配置
+│   │   │       │   └── DatabaseConfig       # 資料庫配置
+│   │   │       ├── controller/              # REST API 控制器
+│   │   │       │   └── APIController       # 被呼叫時執行完成返回資料給scheduler
+│   │   │       ├── service/                # 業務邏輯層
+│   │   │       │   └── impl/
+│   │   │       │       ├── SFTPServiceImpl # SFTP 讀取
+│   │   │       │       └── DatabaseServiceImpl # 寫入 SQL
+│   │   │       ├── repository/             # 資料存取層
+│   │   │       │   └── DataRepository      # JPA 或 JDBC 存取資料庫
+│   │   │       └── util/                   # 工具類
+│   │   │           ├── WebClientUtil       # WebClient 重複邏輯封裝
+│   │   │           └── CSVParserUtil       # CSV 解析工具
+│   │   └── resources/
+│   │       ├── application.yml             # 排程與超時配置
+│   └── test/
+│       └── java/
+│           └── com/example/programname/
+│               └── service/
+│                   └── SFTPServiceTest.java # 單元測試
+├── build.gradle                             # 依賴管理

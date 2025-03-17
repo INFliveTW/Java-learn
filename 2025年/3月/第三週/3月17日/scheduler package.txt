@@ -1,0 +1,41 @@
+scheduler package
+
+定期呼叫外部API：用training-bch-scheduler呼叫training-svc-data-transfer 已使用API
+排程時間 5秒 - application.yml
+
+使用WebClient，設定 timeout 3秒 - application.yml
+
+如果發生 timeout 顯示錯誤訊息
+//.timeout(Duration.ofMillis(100))
+
+.onErrorResume(e -> {
+logger.error("not support: {}", e.getMessage());
+return Mono.error(new RuntimeException("回覆時間過長，請稍後再試！"));
+});
+
+timeout時顯示"回覆時間過長，請稍後再試！"
+company為"金控"、"銀行"、"證券"
+3. 實作一個API，將sftp的檔案內容寫入MS SQL
+用docker運行sftp server
+sftp server存放一個測試用的csv
+DB table欄位設計與csv一致，另外多一個excute_time(yyyy-mm-dd HH:MM:SS)
+當API被呼叫時，讀取sftp的csv，並將csv內容寫入DB
+API用POST，body格式為{"company" : XXX, "excute_time": "2025-3-14 15:31:02"}
+
+
+training-bch-scheduler/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/training/svc/datatransfer/
+│   │   │       ├── SchedulerApplication      # 主應用程式啟動類
+│   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
+│   │   │       │   ├── WebClientConfig      # WebClient 配置
+│   │   │       ├── controller/
+│   │   │       │   └── DataExtractionController  #呼叫API去提取sftp的資料
+│   │   │       └── util/                   # 工具類
+│   │   │           └── WebClientUtil       # WebClient 重複邏輯封裝
+│   │   └── resources/
+│   │       ├── application.yml             # 排程與超時配置
+├── build.gradle                             # 依賴管理
