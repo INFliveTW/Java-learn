@@ -1,0 +1,134 @@
+程式需求：
+第一部分：
+用spring boot 3.X
+
+第二部分：
+實作一個scheduler
+定期呼叫外部API
+可設定排程時間(5 sec)(application.yml)
+可設定一組API url(application.yml)
+使用webclient，設定timeout(3 sec，application.yml)
+timeout時顯示"回覆時間過長，請稍後再試！"
+company為"金控"、"銀行"、"證券"
+
+第三部分：
+實作一個API，將sftp的檔案內容寫入MS SQL
+用docker運行sftp server
+sftp server存放一個測試用的csv
+DB table欄位設計與csv一致，另外多一個excute_time(yyyy-mm-dd HH:MM:SS)
+當API被呼叫時，讀取sftp的csv，並將csv內容寫入DB
+API用POST，body格式為{"company" : XXX, "excute_time": "2025-3-14 15:31:02"}
+
+
+我想到的程式做法(請補齊所有並整理)：
+在scheduler中
+application.yml 設定每五秒會讓scheduler在DatatransferService呼叫另一支程式datatransfer
+然後於CSVToDataBaseService 寫上業務邏輯，然後會去呼叫SFTPServiceImpl去讀取application.yml指定路徑的csv檔案
+然後儲存到EmployeeDataCSVDto再使用CSVParserUtil解析內容，然後用DataConverterImpl轉換為db，透過CSVToDataBaseServiceImpl寫入ms sql，欄位是EmployeeDataEntity的，在EmployeeDataController用POST，寫入
+COMPANY，使用CSVToDataBaseServiceImpl將"金控"、"銀行"、"證券"這三種隨機一個寫入COMPANY欄位
+body格式為{"COMPANY" : XXX, "EXCUTE_TIME": "yyyy-mm-dd hh:mm:ss"}
+最後新增時間戳記，來填入當下寫入的時間EXCUTE_TIME
+
+將目前尚未提及的內容說明用法與內容並要在上述哪個流程加入並使用
+整理好並複述整理好的
+程式需求
+還有
+
+我想到的程式做法
+請補齊所有遺漏並整理說明整理好的完整流程與具體做法
+
+再給"範例"程式並說明每個地方為何要這樣寫
+可以使用在哪，使用時機等詳細說明
+
+以下為DataBase資料:資料表名稱為employee_data
+資料庫名稱為CompanyDB
+
+CREATE TABLE employee_data (
+    ID VARCHAR(20) PRIMARY KEY,
+    DEPARTMENT VARCHAR(50),
+    JOB_TITLE VARCHAR(50),
+    NAME VARCHAR(100),
+    TEL VARCHAR(20),
+    EMAIL VARCHAR(100),
+    COMPANY VARCHAR(50),
+    EXCUTE_TIME DATETIME
+);
+
+以下為兩個package
+1.
+scheduler內容
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/training/bch/scheduler/
+│   │   │       ├── SchedulerApplication      # 主應用程式啟動類
+│   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── ErrorMessage # 錯誤處理(集中)
+│   │   │       │   ├── GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
+│   │   │       │   └── WebClientConfig      # WebClient 配置
+│   │   │       ├── service/
+│   │   │       │   └──  DatatransferService #呼叫datatransfer的API去提取sftp的資料
+│   │   │       └── util/                   # 工具類
+│   │   │           └── WebClientUtil       # WebClient 重複邏輯封裝
+│   │   └── resources/
+│   │       └── application.yml             # 排程與超時配置
+└── build.gradle                             # 依賴管理
+ 
+2.
+datatransfer內容
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/training/svc/datatransfer/
+│   │   │       ├── DatatransferApplication   # 主應用程式啟動類
+│   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── DatabaseConfig       # 資料庫配置
+│   │   │       │   └── SFTPConfig           # SFTP 客戶端配置
+│   │   │       ├── controller/              # REST API 控制器
+│   │   │       │   └── EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
+│   │   │       ├── dto/
+│   │   │       │   ├── CSVToDataBaseResponseDto # Response (呼叫請求)
+│   │   │       │   ├── CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳此│   │   │       │   └── EmployeeDataCSVDto     #SFTP的CSV
+│   │   │       ├──entity                      # 資料模型
+│   │   │       │   └── EmployeeDataEntity      # 對應資料庫表的實體
+│   │   │       ├── repository/             # 資料庫存取層
+│   │   │       │   └── EmployeeDataRepository      # JPA 或 JDBC 存取資料庫
+│   │   │       ├── service/                # 業務邏輯層
+│   │   │       │   └── impl/
+│   │   │       │       ├── CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error
+│   │   │       │       ├── DataConverterImpl # EmployeeDataCSVDto轉換csv資料
+│   │   │       │       └── SFTPServiceImpl # SFTP 讀取
+│   │   │       └── util/                   # 工具類
+│   │   │           ├── CSVParserUtil       # CSV 解析工具
+│   │   │           └── WebClientUtil       # WebClient 重複邏輯封裝
+│   │   └── resources/
+│   │       └── application.yml             # 排程與超時配置
+│   └── test/
+│       └── java/
+│           └── com/example/programname/
+│               └── service/
+│                   └── SFTPServiceTest.java # 單元測試
+└── build.gradle
+
+scheduler
+ErrorMessage # 錯誤處理(集中)
+GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
+WebClientConfig      # WebClient 配置
+DatatransferService #呼叫datatransfer的API去提取sftp的資料
+WebClientUtil       # WebClient 重複邏輯封裝
+application.yml             # 排程與超時配置
+
+datatransfer
+DatabaseConfig       # 資料庫配置
+SFTPConfig           # SFTP 客戶端配置
+EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
+CSVToDataBaseResponseDto # Response (呼叫請求)
+CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳
+EmployeeDataCSVDto     #SFTP的CSV
+EmployeeDataEntity      # 對應資料庫表的實體
+CSVToDataBaseServiceImpl         #SFTP讀取 > csv解析  > 寫入 //try-catch error
+DataConverterImpl # EmployeeDataCSVDto轉換csv資料
+SFTPServiceImpl # SFTP 讀取
+CSVParserUtil       # CSV 解析工具
+WebClientUtil       # WebClient 重複邏輯封裝
+application.yml             # sftp & ms sql連接localhost、port、使用者帳號、密碼這些

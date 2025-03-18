@@ -1,17 +1,16 @@
 spring:
-  application:
-    name: training-bch-scheduler
+  scheduler:
+    cron: "*/5 * * * * *" # 每 5 秒執行
+  webclient:
+    api-url: "http://localhost:8081/api/employee-data"
+    timeout: 3s # 3 秒超時
+# spring:
+#   application:
+#     name: training-bch-scheduler
 
-scheduler:
-  interval: 5s             # 排程間隔，每 5 秒執行一次
-  api:
-    url: "http://localhost:8081/api/data/extract"  # 呼叫 training-svc-data-transfer 的 API
-
-webclient:
-  timeout: 3s              # WebClient 超時時間設為 3 秒
-  base-url: "http://localhost:8081"  # API 服務的基礎 URL
-
-logging:
-  level:
-    root: INFO
-    cdf.training.svc.datatransfer: DEBUG  # 自訂包的日誌級別
+#   scheduler:
+#     interval: 5s
+#     api:
+#       url: "http://localhost:8081/api/data/extract"
+#       timeout: 3s
+#       timeout-message: "回覆時間過長，請稍後再試！"

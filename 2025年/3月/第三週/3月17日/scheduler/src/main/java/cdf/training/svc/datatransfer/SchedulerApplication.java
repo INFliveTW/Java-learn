@@ -1,4 +1,4 @@
-package cdf.training.bch.scheduler;
+package cdf.training.svc.datatransfer;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
