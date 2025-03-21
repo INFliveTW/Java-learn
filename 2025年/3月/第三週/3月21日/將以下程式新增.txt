@@ -63,7 +63,7 @@ datatransfer內容
 └── build.gradle
 
 
-scheduler內容
+先給scheduler內容
 
 SchedulerApplication      # 主應用程式啟動類
 
@@ -346,4 +346,525 @@ tasks.named('test') {
 }
 
 
-接下來是
+接下來是 datatransfer內容
+
+DatatransferApplication   # 主應用程式啟動類
+
+package cdf.training.svc.datatransfer;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DatatransferApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DatatransferApplication.class, args);
+	}
+
+}
+
+
+config/                   # 配置類
+DatabaseConfig       # 資料庫配置
+
+package cdf.training.svc.datatransfer.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+@Configuration
+@EnableJpaRepositories(basePackages = "cdf.training.svc.datatransfer.repository")
+public class DatabaseConfig {
+}
+
+
+ErrorMessage         # 錯誤處理(集中)
+
+package cdf.training.svc.datatransfer.config;
+
+import lombok.Data;
+
+@Data
+public class ErrorMessage {
+    private int status;
+    private String message;
+    public ErrorMessage(int status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+}
+
+
+SFTPConfig           # SFTP 客戶端配置
+
+package cdf.training.svc.datatransfer.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
+
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "sftp")
+public class SFTPConfig {
+    private String host;
+    private int port;
+    private String username;
+    private String password;
+    private String remoteDir;
+}
+
+
+controller/              # REST API 控制器
+EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
+
+package cdf.training.svc.datatransfer.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseResponseDto;
+import cdf.training.svc.datatransfer.service.impl.CSVToDataBaseServiceImpl;
+
+@RestController //標記為 REST 控制器
+@RequestMapping("/api")
+public class EmployeeDataController {
+    private final CSVToDataBaseServiceImpl csvToDataBaseService;
+
+    public EmployeeDataController(CSVToDataBaseServiceImpl csvToDataBaseService) {
+        this.csvToDataBaseService = csvToDataBaseService;
+    }
+
+    @PostMapping("/employee-data") //處理 POST請求
+    public ResponseEntity<CSVToDataBaseResponseDto> processEmployeeData(@RequestBody CSVToDataBaseRequestDto request) {
+        csvToDataBaseService.processCsvToDatabase(request); //調用服務處理
+        return ResponseEntity.ok(new CSVToDataBaseResponseDto("Data processed successfully"));
+    }
+}
+//步驟5：接收請求
+
+
+dto/
+CSVToDataBaseResponseDto # Response (呼叫請求)
+
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class CSVToDataBaseRequestDto {
+    private String COMPANY;
+    private String EXCUTETIME;
+}
+
+
+CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳此
+
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class CSVToDataBaseResponseDto {
+    private String message;
+
+    public CSVToDataBaseResponseDto(String message) {
+        this.message = message;
+    }
+}
+
+
+EmployeeDataCSVDto     #SFTP的CSV
+
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class EmployeeDataCSVDto {
+    private String ID;
+    private String DEPARTMENT;
+    private String JOB_TITLE;
+    private String NAME;
+    private String TEL;
+    private String EMAIL;
+}
+
+
+entity/                      # 資料模型
+
+EmployeeDataEntity      # 對應資料庫表的實體
+
+package cdf.training.svc.datatransfer.entity;
+
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.Data;
+
+@Data
+@Entity
+@Table(name = "employee_data")
+public class EmployeeDataEntity {
+    @Id
+    private String ID;
+    private String DEPARTMENT;
+    private String JOB_TITLE;
+    private String NAME;
+    private String TEL;
+    private String EMAIL;
+    private String COMPANY;
+    private LocalDateTime EXCUTETIME;
+}
+
+
+repository/             # 資料庫存取層
+EmployeeDataRepository      # JPA 或 JDBC 存取資料庫
+
+package cdf.training.svc.datatransfer.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+public interface EmployeeDataRepository extends JpaRepository<EmployeeDataEntity, String> 
+{
+
+}
+
+
+service/                # 業務邏輯層
+impl/
+CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error
+
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+import cdf.training.svc.datatransfer.repository.EmployeeDataRepository;
+import cdf.training.svc.datatransfer.util.CSVParserUtil;
+
+@Service //標記服務類型
+public class CSVToDataBaseServiceImpl {
+    private static final Logger logger = LoggerFactory.getLogger(CSVToDataBaseServiceImpl.class);
+    private final SFTPServiceImpl sftpService;
+    private final CSVParserUtil csvParserUtil;
+    private final DataConverterImpl dataConverter;
+    private final EmployeeDataRepository repository;
+    //private final 注入依賴
+
+    public CSVToDataBaseServiceImpl(SFTPServiceImpl sftpService, CSVParserUtil csvParserUtil,
+                                    DataConverterImpl dataConverter, EmployeeDataRepository repository) {
+        this.sftpService = sftpService;
+        this.csvParserUtil = csvParserUtil;
+        this.dataConverter = dataConverter;
+        this.repository = repository;
+    }
+
+    public void processCsvToDatabase(CSVToDataBaseRequestDto request) {
+        try {
+            String csvContent = sftpService.readFileFromSFTP("/upload/employee_data.csv");
+            logger.info("從SFTP讀取的CSV內容: {}", csvContent);
+            //讀取SFTP
+            List<EmployeeDataCSVDto> csvDtos = csvParserUtil.parseCsv(csvContent);
+            //解析CSV
+            String COMPANY = request.getCOMPANY() != null ? request.getCOMPANY() :
+                    List.of("金控", "銀行", "證券").get(new Random().nextInt(3));
+            String EXCUTETIMEStr = request.getEXCUTETIME() != null ? request.getEXCUTETIME() :
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime EXCUTETIME = LocalDateTime.parse(EXCUTETIMEStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            //轉換時間
+            List<EmployeeDataEntity> entities = dataConverter.convertToEntities(csvDtos, COMPANY, EXCUTETIME);
+            
+            for (EmployeeDataEntity entity : entities) {
+                logger.info("準備寫入SQL: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}, COMPANY={}, EXCUTETIME={}",
+                        entity.getID(), entity.getDEPARTMENT(), entity.getJOB_TITLE(), entity.getNAME(),
+                        entity.getTEL(), entity.getEMAIL(), entity.getCOMPANY(), entity.getEXCUTETIME());
+            }
+            
+            repository.saveAll(entities); //寫入資料庫
+        } catch (Exception e) {
+            String errorMessage = e.getMessage().contains("SFTP") ? "無法連接到 SFTP 伺服器，請檢查配置或網路狀態" :
+                    e.getMessage().contains("parse") ? "CSV 檔案解析失敗，請確認檔案格式正確" :
+                            e.getMessage().contains("database") ? "資料庫寫入失敗，請檢查資料庫連線或權限" :
+                                    "發生未知錯誤：" + e.getMessage();
+            logger.error("將 CSV 傳輸到資料庫時出錯: {}", errorMessage);
+            throw new RuntimeException(errorMessage, e);
+        }
+    }
+}
+//步驟6：SFTP讀取
+
+
+DataConverterImpl # EmployeeDataCSVDto轉換csv資料
+
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+@Component //轉換類型
+public class DataConverterImpl {
+    public List<EmployeeDataEntity> convertToEntities(List<EmployeeDataCSVDto> dtos, String COMPANY, LocalDateTime EXCUTETIME) {
+        return dtos.stream().map(dto -> { //映射DTO到實體
+            EmployeeDataEntity entity = new EmployeeDataEntity();
+            entity.setID(dto.getID());
+            entity.setDEPARTMENT(dto.getDEPARTMENT());
+            entity.setJOB_TITLE(dto.getJOB_TITLE());
+            entity.setNAME(dto.getNAME());
+            entity.setTEL(dto.getTEL());
+            entity.setEMAIL(dto.getEMAIL());
+            entity.setCOMPANY(COMPANY);
+            entity.setEXCUTETIME(EXCUTETIME);
+            return entity;
+        }).collect(Collectors.toList());
+    }
+}
+//步驟9：CSV轉換成DB
+
+
+SFTPServiceImpl # SFTP 讀取
+
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.io.InputStream;
+
+import org.springframework.stereotype.Service;
+
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+import cdf.training.svc.datatransfer.config.SFTPConfig;
+
+@Service
+public class SFTPServiceImpl {
+    private final SFTPConfig sftpConfig;
+    //注入SFTP
+    public SFTPServiceImpl(SFTPConfig sftpConfig) {
+        this.sftpConfig = sftpConfig;
+    }
+
+    public String readFileFromSFTP(String filePath) {
+        //讀取SFTP
+        try {
+            JSch jsch = new JSch();
+            //初始化 JSch
+            Session session = jsch.getSession(sftpConfig.getUsername(), sftpConfig.getHost(), sftpConfig.getPort());
+            //建立SFTP (使用 SFTPConfig配置)
+            session.setPassword(sftpConfig.getPassword());
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+            //連線到SFTP
+            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect(); //開啟SFTP通道
+            InputStream inputStream = channel.get(filePath);
+            String content = new String(inputStream.readAllBytes());
+            channel.disconnect();
+            session.disconnect(); //關閉連線
+            return content;
+        } catch (Exception e) {
+            throw new RuntimeException("SFTP error: " + e.getMessage(), e);
+        }
+    }
+}
+//步驟7：SFTP處理
+
+
+util/                   # 工具類
+CSVParserUtil       # CSV 解析工具
+
+package cdf.training.svc.datatransfer.util;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+
+@Component
+public class CSVParserUtil {
+    private static final Logger logger = LoggerFactory.getLogger(CSVParserUtil.class);
+    
+    public List<EmployeeDataCSVDto> parseCsv(String csvContent) {
+        List<String> lines = Arrays.asList(csvContent.split("\n"));
+        if (lines.isEmpty()) {
+            throw new IllegalArgumentException("CSV 內容為空");
+        }
+
+        // 解析標題
+        String[] headers = lines.get(0).split(",");
+        Map<String, Integer> headerMap = new HashMap<>();
+        for (int i = 0; i < headers.length; i++) {
+            headerMap.put(headers[i].trim().toLowerCase(), i); // 忽略大小寫並去除空白
+        }
+
+        // 解析資料行
+        return lines.stream()
+                .skip(1) // 跳過標頭
+                .filter(line -> !line.trim().isEmpty()) // 過濾空行
+                .map(line -> {
+                    String[] fields = line.split(",");
+                    EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
+
+                    // 動態映射字段
+                    dto.setID(getFieldValue(fields, headerMap, "ID"));
+                    dto.setDEPARTMENT(getFieldValue(fields, headerMap, "DEPARTMENT"));
+                    dto.setJOB_TITLE(getFieldValue(fields, headerMap, "JOB_TITLE"));
+                    dto.setNAME(getFieldValue(fields, headerMap, "NAME"));
+                    dto.setTEL(getFieldValue(fields, headerMap, "TEL"));
+                    dto.setEMAIL(getFieldValue(fields, headerMap, "EMAIL"));
+
+                    logger.info("Parsed CSV data: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}",
+                            dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
+                            dto.getTEL(), dto.getEMAIL());
+                            
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
+        Integer index = headerMap.get(fieldName.toLowerCase());
+        return (index != null && index < fields.length) ? fields[index].trim() : null;
+    }
+}
+//步驟8：CSV解析
+
+
+WebClientUtil       # WebClient 重複邏輯封裝
+
+package cdf.training.svc.datatransfer.util;
+
+public class WebClientUtil {
+    
+}
+
+
+
+resources/
+application.yml             # 排程與超時配置
+
+spring:
+  application:
+    name: training-svc-data-transfer
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false
+    username: sa
+    password: 1QAZ2WSX3EDc4@
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.SQLServerDialect
+server:
+  port: 8081
+sftp:
+  host: localhost
+  port: 2222
+  username: sa
+  password: 1QAZ2WSX3EDc4@
+  remote-dir: /upload
+docker:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    ports: "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "1QAZ2WSX3EDc4@"
+      MSSQL_PID: "Express"
+  sftp:
+    image: atmoz/sftp
+    ports: "2222:22"
+    command: "sa:1QAZ2WSX3EDc4@:1001::upload"
+    volumes: "./sftp-data:/upload"
+logging:
+  level:
+    root: INFO
+    cdf.training.svc.datatransfer: DEBUG
+    
+  logging:
+    charset:
+      console: UTF-8
+
+
+build.gradle
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cdf.training.svc'
+version = '1.0.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.jcraft:jsch:0.1.55'
+	implementation 'com.opencsv:opencsv:5.9'
+	implementation 'org.springframework.integration:spring-integration-sftp'
+    implementation 'org.apache.commons:commons-csv:1.8'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+

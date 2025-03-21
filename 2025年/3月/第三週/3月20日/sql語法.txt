@@ -9,6 +9,7 @@ CREATE TABLE employee_data (
     EXCUTETIME DATETIME
 );
 
+Datatransfer
 
 CREATE TABLE employee_data (
     ID VARCHAR(20),
@@ -20,3 +21,12 @@ CREATE TABLE employee_data (
     COMPANY VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS,
     EXCUTETIME DATETIME
 );
+
+docker run -d --name SFTP-CSV \
+  -p 2222:22 \
+  -v ./sftp-data:/home/sa/upload \
+  atmoz/sftp sa:1QAZ2WSX3EDc4@:1001::upload
+
+docker run -d --name SFTP-CSV -p 2222:22 -v ./sftp-data:/home/sa/upload atmoz/sftp sa:1QAZ2WSX3EDc4@:1001::upload
+
+docker run -d --name EmployeeDataSQL -p 1433:1433 -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=1QAZ2WSX3EDc4@" -e "MSSQL_PID=Express" mcr.microsoft.com/mssql/server:2019-latest
