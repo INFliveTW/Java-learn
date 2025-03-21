@@ -1,4 +1,4 @@
-package cdf.training.svc.datatransfer.config;
+package cdf.training.bch.scheduler.config;
 
 import lombok.Data;
 

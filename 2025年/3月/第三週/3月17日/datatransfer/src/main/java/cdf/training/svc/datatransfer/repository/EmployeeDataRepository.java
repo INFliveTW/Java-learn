@@ -1,5 +1,10 @@
 package cdf.training.svc.datatransfer.repository;
 
-public class DataRepository {
-    
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+public interface EmployeeDataRepository extends JpaRepository<EmployeeDataEntity, String> 
+{
+
 }

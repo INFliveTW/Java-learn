@@ -1,4 +1,4 @@
-package cdf.training.svc.datatransfer.config;
+package cdf.training.bch.scheduler.config;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;

@@ -1,9 +1,11 @@
+scheduler內容
 ├── src/
 │   ├── main/
 │   │   ├── java/
 │   │   │   └── cdf/training/bch/scheduler/
 │   │   │       ├── SchedulerApplication      # 主應用程式啟動類
 │   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── APIProperties # API URL
 │   │   │       │   ├── ErrorMessage # 錯誤處理(集中)
 │   │   │       │   ├── GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
 │   │   │       │   └── WebClientConfig      # WebClient 配置
@@ -16,7 +18,7 @@
 └── build.gradle                             # 依賴管理
  
  
- 
+datatransfer內容
 ├── src/
 │   ├── main/
 │   │   ├── java/
@@ -24,6 +26,7 @@
 │   │   │       ├── DatatransferApplication   # 主應用程式啟動類
 │   │   │       ├── config/                   # 配置類
 │   │   │       │   ├── DatabaseConfig       # 資料庫配置
+│   │   │       │   ├── ErrorMessage         # 錯誤處理(集中)
 │   │   │       │   └── SFTPConfig           # SFTP 客戶端配置
 │   │   │       ├── controller/              # REST API 控制器
 │   │   │       │   └── EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
@@ -46,7 +49,6 @@
 │   │       └── application.yml             # 排程與超時配置
 │   └── test/
 │       └── java/
-│           └── com/example/programname/
-│               └── service/
-│                   └── SFTPServiceTest.java # 單元測試
-├── build.gradle
+│           └── cdf/training/svc/datatransfer
+│               └── # 單元測試
+└── build.gradle

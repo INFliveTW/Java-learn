@@ -13,12 +13,9 @@ logger.error("not support: {}", e.getMessage());
 return Mono.error(new RuntimeException("回覆時間過長，請稍後再試！"));
 });
 
-timeout時顯示"回覆時間過長，請稍後再試！"
-company為"金控"、"銀行"、"證券"
-3. 實作一個API，將sftp的檔案內容寫入MS SQL
-用docker運行sftp server
-sftp server存放一個測試用的csv
-DB table欄位設計與csv一致，另外多一個excute_time(yyyy-mm-dd HH:MM:SS)
+
+
+
 當API被呼叫時，讀取sftp的csv，並將csv內容寫入DB
 API用POST，body格式為{"company" : XXX, "excute_time": "2025-3-14 15:31:02"}
 

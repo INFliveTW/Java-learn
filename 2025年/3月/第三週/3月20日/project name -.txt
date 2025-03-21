@@ -1,0 +1,18 @@
+project name -
+    training-bch-scheduler
+    training-svc-data-transfer
+ 
+Group -
+    cdf.training
+ 
+Artifactld -
+    training-bch-scheduler
+    training-svc-data-transfer
+ 
+version -
+    1.0.0-SNAPSHOT
+ 
+package -
+    cdf.training.bch.scheduler
+    cdf.training.svc.datatransfer
+ 

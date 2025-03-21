@@ -1,0 +1,30 @@
+用POSTMAN測試
+
+
+在請求類型下拉選單中選擇 POST。
+在 URL 欄輸入：
+http://localhost:8081/api/employee-data
+
+//這對應於您的 EmployeeDataController 中的 @RequestMapping("/api") 和 @PostMapping("/employee-data")。
+
+點擊 Headers 標籤。
+添加以下鍵值對：
+Key: Content-Type
+Value: application/json
+這告訴伺服器您發送的是 JSON 格式的數據。
+
+點擊 Body 標籤。
+選擇 raw 選項。
+在右側的下拉選單中選擇 JSON（確保與 Content-Type 一致）。
+在輸入框中輸入以下 JSON 數據：
+{
+    "COMPANY": "銀行"
+}
+
+點擊右上角的 Send 按鈕。
+{
+    "message": "Data processed successfully"
+}
+
+驗證資料庫
+SELECT * FROM employee_data;

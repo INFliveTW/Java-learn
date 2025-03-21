@@ -1,0 +1,11 @@
+如何在超時時顯示 timeoutMessage
+
+當 WebClient 呼叫超時時，會拋出 reactor.core.publisher.TimeoutException。我們可以在 DatatransferService 中使用 onErrorResume 捕捉此異常，並從 APIProperties 獲取 timeoutMessage 顯示。
+
+在 DatatransferService 的 WebClient 呼叫中處理，而不是依賴 GlobalExceptionHandler，因為這是一個定時任務的非同步操作，而不是傳統的 REST API 回應。
+
+如何讓 Scheduled 每 5 秒呼叫 DatatransferService？
+
+機制：使用 Spring 的 @Scheduled 注解，並從 application.yml 的 spring.scheduler.interval 獲取間隔時間（5 秒），轉換為毫秒（5000）。
+
+實現位置：在 DatatransferService 中添加 @Scheduled 注解，並指定 fixedRateString。

@@ -1,16 +1,17 @@
 spring:
-  scheduler:
-    cron: "*/5 * * * * *" # 每 5 秒執行
-  webclient:
-    api-url: "http://localhost:8081/api/employee-data"
-    timeout: 3s # 3 秒超時
-# spring:
-#   application:
-#     name: training-bch-scheduler
+  application:
+    name: training-bch-scheduler
 
-#   scheduler:
-#     interval: 5s
-#     api:
-#       url: "http://localhost:8081/api/data/extract"
-#       timeout: 3s
-#       timeout-message: "回覆時間過長，請稍後再試！"
+  scheduler:
+    interval: 5
+    api:
+      url: "http://localhost:8081/api/data/extract"
+      # http://localhost:8081/api/employee-data?Content-Type=application/json
+      timeout: 300
+      timeout-message: "回覆時間過長，請稍後再試！"
+
+logging:
+  charset:
+    console: UTF-8
+      # 步驟4：Datatransfer接收
+      # 提供配置給 APIProperties 和 DatatransferService，步驟1

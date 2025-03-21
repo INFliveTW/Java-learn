@@ -8,11 +8,11 @@ import com.example.moneychangeapi.service.TestService;
 import reactor.core.publisher.Mono;
 
 @RestController
-public class TeestController {
+public class TestController {
 
     private final TestService service;
 
-    public TeestController(TestService service) {
+    public TestController(TestService service) {
         this.service = service;
     }
 

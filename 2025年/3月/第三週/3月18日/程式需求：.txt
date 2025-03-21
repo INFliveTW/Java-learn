@@ -63,6 +63,7 @@ scheduler內容
 │   │   │   └── cdf/training/bch/scheduler/
 │   │   │       ├── SchedulerApplication      # 主應用程式啟動類
 │   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── APIPropties # 處理API
 │   │   │       │   ├── ErrorMessage # 錯誤處理(集中)
 │   │   │       │   ├── GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
 │   │   │       │   └── WebClientConfig      # WebClient 配置
@@ -83,6 +84,7 @@ datatransfer內容
 │   │   │       ├── DatatransferApplication   # 主應用程式啟動類
 │   │   │       ├── config/                   # 配置類
 │   │   │       │   ├── DatabaseConfig       # 資料庫配置
+│   │   │       │   ├── ErrorMessage			 # 錯誤處理(集中)
 │   │   │       │   └── SFTPConfig           # SFTP 客戶端配置
 │   │   │       ├── controller/              # REST API 控制器
 │   │   │       │   └── EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
@@ -95,14 +97,14 @@ datatransfer內容
 │   │   │       │   └── EmployeeDataRepository      # JPA 或 JDBC 存取資料庫
 │   │   │       ├── service/                # 業務邏輯層
 │   │   │       │   └── impl/
-│   │   │       │       ├── CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error
+│   │   │       │       ├── CSVToDataBaseServiceImpl #SFTP讀取 > csv解析  > sql寫入 //try-catch error
 │   │   │       │       ├── DataConverterImpl # EmployeeDataCSVDto轉換csv資料
 │   │   │       │       └── SFTPServiceImpl # SFTP 讀取
 │   │   │       └── util/                   # 工具類
 │   │   │           ├── CSVParserUtil       # CSV 解析工具
 │   │   │           └── WebClientUtil       # WebClient 重複邏輯封裝
 │   │   └── resources/
-│   │       └── application.yml             # 排程與超時配置
+│   │       └── application.yml             # SFTP & MS SQL 資料
 │   └── test/
 │       └── java/
 │           └── com/example/programname/

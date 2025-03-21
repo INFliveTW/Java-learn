@@ -1,0 +1,72 @@
+//步驟1：Scheduler初始化
+
+//步驟2：定時觸發
+
+//步驟3：發送請求
+
+SELECT SERVERPROPERTY('Collation') AS ServerCollation;
+
+EXEC sp_help 'employee_data';
+
+SELECT * FROM employee_data;
+
+
+
+從SFTP讀取的CSV內容
+準備寫入SQL
+將 CSV 傳輸到資料庫時出錯
+
+mssql-training-bch-scheduler
+
+localhost
+
+sa
+
+ALTER DATABASE CompanyDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+ALTER DATABASE CompanyDB SET OFFLINE;
+DROP DATABASE CompanyDB;
+
+CREATE TABLE employee_data (
+    ID NVARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    DEPARTMENT NVARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    JOB_TITLE NVARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    NAME NVARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    TEL NVARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    EMAIL NVARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    COMPANY NVARCHAR(50) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    EXCUTETIME DATETIME
+);
+
+CREATE TABLE employee_data (
+    ID VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    DEPARTMENT VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS,
+    JOB_TITLE VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS,
+    NAME VARCHAR(100) COLLATE Chinese_Taiwan_Stroke_CI_AS,
+    TEL VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    EMAIL VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS,
+    COMPANY VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS,
+    EXCUTETIME DATETIME
+);
+
+ALTER TABLE employee_data
+    ALTER COLUMN ID VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN DEPARTMENT VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN JOB_TITLE VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN NAME VARCHAR(100) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN TEL VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN EMAIL VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN COMPANY VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+-- EXCUTETIME 已是 DATETIME，無需修改

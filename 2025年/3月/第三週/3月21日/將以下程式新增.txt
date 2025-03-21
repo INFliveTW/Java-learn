@@ -1,0 +1,349 @@
+將以下程式新增
+
+
+實作單元測試與整合測試（JUnit）
+
+使用 Mock 框架模擬外部 API 請求（如 WebTestClient 或 WireMock）
+
+並給予詳細說明與測試方式等...
+
+scheduler內容
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/training/bch/scheduler/
+│   │   │       ├── SchedulerApplication      # 主應用程式啟動類
+│   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── APIProperties # API URL
+│   │   │       │   ├── ErrorMessage # 錯誤處理(集中)
+│   │   │       │   ├── GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
+│   │   │       │   └── WebClientConfig      # WebClient 配置
+│   │   │       ├── service/
+│   │   │       │   └──  DatatransferService #呼叫datatransfer的API去提取sftp的資料
+│   │   │       └── util/                   # 工具類
+│   │   │           └── WebClientUtil       # WebClient 重複邏輯封裝
+│   │   └── resources/
+│   │       └── application.yml             # 排程與超時配置
+└── build.gradle                             # 依賴管理
+ 
+ 
+datatransfer內容
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/training/svc/datatransfer/
+│   │   │       ├── DatatransferApplication   # 主應用程式啟動類
+│   │   │       ├── config/                   # 配置類
+│   │   │       │   ├── DatabaseConfig       # 資料庫配置
+│   │   │       │   ├── ErrorMessage         # 錯誤處理(集中)
+│   │   │       │   └── SFTPConfig           # SFTP 客戶端配置
+│   │   │       ├── controller/              # REST API 控制器
+│   │   │       │   └── EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
+│   │   │       ├── dto/
+│   │   │       │   ├── CSVToDataBaseResponseDto # Response (呼叫請求)
+│   │   │       │   ├── CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳此│   │   │       │   └── EmployeeDataCSVDto     #SFTP的CSV
+│   │   │       ├──entity/                      # 資料模型
+│   │   │       │   └── EmployeeDataEntity      # 對應資料庫表的實體
+│   │   │       ├── repository/             # 資料庫存取層
+│   │   │       │   └── EmployeeDataRepository      # JPA 或 JDBC 存取資料庫
+│   │   │       ├── service/                # 業務邏輯層
+│   │   │       │   └── impl/
+│   │   │       │       ├── CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error
+│   │   │       │       ├── DataConverterImpl # EmployeeDataCSVDto轉換csv資料
+│   │   │       │       └── SFTPServiceImpl # SFTP 讀取
+│   │   │       └── util/                   # 工具類
+│   │   │           ├── CSVParserUtil       # CSV 解析工具
+│   │   │           └── WebClientUtil       # WebClient 重複邏輯封裝
+│   │   └── resources/
+│   │       └── application.yml             # 排程與超時配置
+│   └── test/
+│       └── java/
+│           └── cdf/training/svc/datatransfer
+│               └── # 單元測試
+└── build.gradle
+
+
+scheduler內容
+
+SchedulerApplication      # 主應用程式啟動類
+
+package cdf.training.bch.scheduler;
+
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SchedulerApplication {
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        System.setOut(new PrintStream(System.out, true, "UTF-8"));
+        System.out.println("Current encoding: " + Charset.defaultCharset().name());
+        SpringApplication.run(SchedulerApplication.class, args);
+    }
+}
+
+
+config/
+
+APIProperties # API URL
+
+package cdf.training.bch.scheduler.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import lombok.Data;
+
+@Data // Lombok 提供的 @Data 注解，自動生成 getter/setter 等方法
+@Component // 添加此注解使其成為 Spring Bean
+@ConfigurationProperties(prefix = "spring.scheduler.api")
+public class APIProperties {
+    private String apiUrl;
+    private int timeout;
+    private String timeoutMessage;
+}
+
+
+ErrorMessage # 錯誤處理(集中)
+
+package cdf.training.bch.scheduler.config;
+
+import lombok.Data;
+
+@Data
+public class ErrorMessage {
+    private int status;
+    private String message;
+    public ErrorMessage(int status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+}
+
+
+GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
+
+package cdf.training.bch.scheduler.config;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import reactor.core.publisher.Mono;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(WebClientResponseException.class)
+    public Mono<ResponseEntity<ErrorMessage>> handleWebClientException(WebClientResponseException ex) {
+        HttpStatusCode statusCode = ex.getStatusCode();
+        HttpStatus status = HttpStatus.valueOf(statusCode.value());
+
+        String errorMessage;
+        System.err.println("response: " + ex.getResponseBodyAsString());
+
+        if (status.is4xxClientError()) {
+            if (status.value() == 400) {
+                System.out.println();
+                System.out.println("400錯誤訊息：");
+                errorMessage = "格式錯誤/參數驗證失敗";
+            } else if (status.value() == 404) {
+                System.out.println("404錯誤訊息：");
+                errorMessage = "找不到檔案";
+            } else {
+                errorMessage = "客戶端錯誤: " + status.value();
+            }
+        } else if (status.is5xxServerError()) {
+            errorMessage = "伺服器錯誤，請稍後再試";
+        } else {
+            errorMessage = "發生未預期的錯誤，請聯繫管理員";
+        }
+        System.out.println("錯誤status: " + status);
+        System.out.println("錯誤statusvalue: " + status.value());
+        ErrorMessage error = new ErrorMessage(status.value(), errorMessage);
+        
+        System.out.println("錯誤訊息: " + error);
+        return Mono.just(ResponseEntity.status(status).body(error));
+    }
+}
+
+
+WebClientConfig      # WebClient 配置
+
+package cdf.training.bch.scheduler.config;
+
+import java.time.Duration;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.netty.http.client.HttpClient;
+
+@Configuration //配置類，定義Bean
+//SchedulerApplication掃描相關
+public class WebClientConfig {
+    private final APIProperties apiProperties;
+    //注入apiProperties
+    //從application.yml讀取timeout
+    
+    public WebClientConfig(APIProperties apiProperties) {
+        this.apiProperties = apiProperties;
+    }
+    //@Bean：定義 WebClient 的 Bean
+
+    @Bean
+    public WebClient webClient() {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(apiProperties.getTimeout())); // 從 APIProperties 獲取 timeout
+        //獲取timeout: 3秒
+        //影響DatatransferService的API呼叫
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+        //用來構建 WebClient
+    }
+}
+
+
+service/
+
+DatatransferService #呼叫datatransfer的API去提取sftp的資料
+
+package cdf.training.bch.scheduler.service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import cdf.training.bch.scheduler.config.APIProperties;
+import lombok.Value;
+import reactor.core.publisher.Mono;
+
+@Service //標記服務類型
+@EnableScheduling //啟用定時任務(5秒)
+@Value //步驟1的初始化
+public class DatatransferService {
+    WebClient webClient;
+    APIProperties apiProperties;
+
+    @Scheduled(fixedRateString = "${spring.scheduler.interval}000") //每五秒執行(interval在application.yml)
+    public void callDatatransferApi() {
+        String randomCompany = List.of("金控", "銀行", "證券").get(new Random().nextInt(3));
+        //隨機選擇任一公司
+        Map<String, String> requestBody = Map.of(
+                "COMPANY", randomCompany,
+                "EXCUTE_TIME", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+        );
+
+        webClient.post()
+                .uri(apiProperties.getApiUrl()) //目標URL
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class) //獲取回應
+                .onErrorResume(throwable -> { //超時返回timeoutMessage
+                    if(throwable instanceof java.util.concurrent.TimeoutException) {
+                        return  Mono.just(apiProperties.getTimeoutMessage());
+                    }
+                    return Mono.just(apiProperties.getTimeoutMessage());
+                })
+                .subscribe(result -> System.out.println("超時："+ result));
+    }
+}
+
+
+util/
+
+WebClientUtil       # WebClient 重複邏輯封裝
+
+package cdf.training.bch.scheduler.util; 
+
+public class WebClientUtil {
+
+}
+
+
+resources/
+
+application.yml             # 排程與超時配置
+
+spring:
+  application:
+    name: training-bch-scheduler
+
+  scheduler:
+    interval: 5
+    api:
+      url: "http://localhost:8081/api/data/extract"
+      timeout: 3
+      timeout-message: "回覆時間過長，請稍後再試！"
+
+logging:
+  charset:
+    console: UTF-8
+      # 步驟4：Datatransfer接收
+      # 提供配置給 APIProperties 和 DatatransferService，步驟1
+
+
+build.gradle                             # 依賴管理
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cdf.training.bch'
+version = '1.0.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+bootRun {
+    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8']
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+
+接下來是
