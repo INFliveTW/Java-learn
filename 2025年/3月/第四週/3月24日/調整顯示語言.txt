@@ -2,26 +2,7 @@
 
 1.調整MS SQL排序語言為繁體中文
 
-ALTER TABLE employee_data
-    ALTER COLUMN ID VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS;
 
-ALTER TABLE employee_data
-    ALTER COLUMN DEPARTMENT VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
-
-ALTER TABLE employee_data
-    ALTER COLUMN JOB_TITLE VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
-
-ALTER TABLE employee_data
-    ALTER COLUMN NAME VARCHAR(100) COLLATE Chinese_Taiwan_Stroke_CI_AS;
-
-ALTER TABLE employee_data
-    ALTER COLUMN TEL VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS;
-
-ALTER TABLE employee_data
-    ALTER COLUMN EMAIL VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS;
-
-ALTER TABLE employee_data
-    ALTER COLUMN COMPANY VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
 
 -- EXCUTETIME 已是 DATETIME，無需修改
 
