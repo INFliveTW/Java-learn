@@ -48,13 +48,13 @@ public class DatatransferService {
                     log.error("🚨 API 呼叫失敗：" + throwable.getMessage());
                     log.info("🔍 API URL: {}", apiProperties.getUrl());
 
+                    // return Mono.just(apiProperties.getTimeoutMessage());
+                
+                    if(throwable instanceof java.util.concurrent.TimeoutException) {
+                        return  Mono.just(apiProperties.getTimeoutMessage());
+                    }
                     return Mono.just(apiProperties.getTimeoutMessage());
                 })
-                //     if(throwable instanceof java.util.concurrent.TimeoutException) {
-                //         return  Mono.just(apiProperties.getTimeoutMessage());
-                //     }
-                //     return Mono.just(apiProperties.getTimeoutMessage());
-                // })
                 .subscribe(result -> System.out.println("API 回應："+ result));
     }
 }

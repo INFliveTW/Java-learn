@@ -7,11 +7,12 @@ import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
 import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+import cdf.training.svc.datatransfer.repository.EmployeeDataRepository;
 import cdf.training.svc.datatransfer.util.CSVParserUtil;
 
 @Service
@@ -20,14 +21,14 @@ public class CSVToDataBaseServiceImpl {
     private final SFTPServiceImpl sftpService;
     private final CSVParserUtil csvParserUtil;
     private final DataConverterImpl dataConverter;
-    private final JdbcTemplate jdbcTemplate;
+    private final EmployeeDataRepository repository;
 
     public CSVToDataBaseServiceImpl(SFTPServiceImpl sftpService, CSVParserUtil csvParserUtil,
-                                    DataConverterImpl dataConverter, JdbcTemplate jdbcTemplate) {
+                                    DataConverterImpl dataConverter, EmployeeDataRepository repository) {
         this.sftpService = sftpService;
         this.csvParserUtil = csvParserUtil;
         this.dataConverter = dataConverter;
-        this.jdbcTemplate = jdbcTemplate;
+        this.repository = repository;
     }
 
     public void processCsvToDatabase(CSVToDataBaseRequestDto request) {
@@ -43,22 +44,16 @@ public class CSVToDataBaseServiceImpl {
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
             LocalDateTime EXCUTETIME = LocalDateTime.parse(EXCUTETIMEStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-            // 增強 DTO 資料
-            List<EmployeeDataCSVDto> enrichedDtos = dataConverter.enrichCsvData(csvDtos, COMPANY, EXCUTETIME);
+            List<EmployeeDataEntity> entities = dataConverter.convertToEntities(csvDtos, COMPANY, EXCUTETIME);
 
-            String sql = "INSERT INTO employee_data (ID, DEPARTMENT, JOB_TITLE, NAME, TEL, EMAIL, COMPANY, EXCUTETIME) " +
-                         "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-            for (EmployeeDataCSVDto dto : enrichedDtos) {
+            for (EmployeeDataEntity entity : entities) {
                 logger.info("準備寫入 SQL: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}, COMPANY={}, EXCUTETIME={}",
-                        dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
-                        dto.getTEL(), dto.getEMAIL(), dto.getCOMPANY(), dto.getEXCUTETIME());
-
-                jdbcTemplate.update(sql, dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
-                        dto.getTEL(), dto.getEMAIL(), dto.getCOMPANY(), dto.getEXCUTETIME());
+                        entity.getID(), entity.getDEPARTMENT(), entity.getJOB_TITLE(), entity.getNAME(),
+                        entity.getTEL(), entity.getEMAIL(), entity.getCOMPANY(), entity.getEXCUTETIME());
+                repository.insert(entity); // 使用 MyBatis 插入
             }
 
-            logger.info("成功新增 {} 筆資料到資料庫", enrichedDtos.size());
+            logger.info("成功新增 {} 筆資料到資料庫", entities.size());
 
         } catch (Exception e) {
             String errorMessage = e.getMessage().contains("SFTP") ? "無法連接到 SFTP 伺服器，請檢查配置或網路狀態" :
@@ -70,3 +65,4 @@ public class CSVToDataBaseServiceImpl {
         }
     }
 }
+//步驟6：SFTP讀取

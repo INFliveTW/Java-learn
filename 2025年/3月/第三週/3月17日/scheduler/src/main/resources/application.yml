@@ -3,12 +3,12 @@ spring:
     name: training-bch-scheduler
 
   scheduler:
-    interval: 5
+    interval: 5 #幾秒呼叫一次API
     api:
       url: "http://localhost:8081/api/employee-data"
       # http://localhost:8081/api/employee-data?Content-Type=application/json
-      # timeout: 3
-      # timeout-message: "回覆時間過長，請稍後再試！"
+      timeout: 3 #API呼叫超時時間
+      timeout-message: "回覆時間過長，請稍後再試！"
 
 logging:
   charset:
