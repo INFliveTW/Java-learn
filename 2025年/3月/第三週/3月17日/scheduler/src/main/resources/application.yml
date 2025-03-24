@@ -7,7 +7,7 @@ spring:
     api:
       url: "http://localhost:8081/api/data/extract"
       # http://localhost:8081/api/employee-data?Content-Type=application/json
-      timeout: 300
+      timeout: 3
       timeout-message: "回覆時間過長，請稍後再試！"
 
 logging:

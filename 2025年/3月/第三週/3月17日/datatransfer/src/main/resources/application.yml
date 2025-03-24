@@ -2,7 +2,7 @@ spring:
   application:
     name: training-svc-data-transfer
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false
+    url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false;collation=Chinese_Taiwan_Stroke_CI_AS
     username: sa
     password: 1QAZ2WSX3EDc4@
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
@@ -21,24 +21,25 @@ sftp:
   username: sa
   password: 1QAZ2WSX3EDc4@
   remote-dir: /upload
-docker:
-  mssql:
-    image: mcr.microsoft.com/mssql/server:2019-latest
-    ports: "1433:1433"
-    environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "1QAZ2WSX3EDc4@"
-      MSSQL_PID: "Express"
-  sftp:
-    image: atmoz/sftp
-    ports: "2222:22"
-    command: "sa:1QAZ2WSX3EDc4@:1001::upload"
-    volumes: "./sftp-data:/upload"
+# docker:
+#   mssql:
+#     image: mcr.microsoft.com/mssql/server:2019-latest
+#     ports: 
+#       - "1433:1433"
+#     environment:
+#       ACCEPT_EULA: "Y"
+#       SA_PASSWORD: "1QAZ2WSX3EDc4@"
+#       MSSQL_PID: "Express"
+#   sftp:
+#     image: atmoz/sftp
+#     ports:
+#       - "2222:22"
+#     command: "sa:1QAZ2WSX3EDc4@:1001::upload"
+#     volumes:
+#       - "./sftp-data:/upload"
 logging:
   level:
     root: INFO
     cdf.training.svc.datatransfer: DEBUG
-    
-  logging:
-    charset:
-      console: UTF-8
+  charset:
+    console: UTF-8

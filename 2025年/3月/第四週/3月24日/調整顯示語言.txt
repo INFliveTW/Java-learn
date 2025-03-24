@@ -1,0 +1,49 @@
+調整顯示語言
+
+1.調整POWERSHELL語言為UTF-8(繁體中文) - 而非預設950(繁體中文)
+
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+2.調整MS SQL排序語言為繁體中文
+
+ALTER TABLE employee_data
+    ALTER COLUMN ID VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN DEPARTMENT VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN JOB_TITLE VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN NAME VARCHAR(100) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN TEL VARCHAR(20) COLLATE SQL_Latin1_General_CP1_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN EMAIL VARCHAR(100) COLLATE SQL_Latin1_General_CP1_CI_AS;
+
+ALTER TABLE employee_data
+    ALTER COLUMN COMPANY VARCHAR(50) COLLATE Chinese_Taiwan_Stroke_CI_AS;
+
+-- EXCUTETIME 已是 DATETIME，無需修改
+
+3.使用POSTMAN
+
+(1)請求類型 > POST。
+URL：http://localhost:8081/api/employee-data
+
+(2)鍵值標籤
+Key：Content-Type
+Value：application/json
+
+(3)Body > raw
+選擇 JSON（確保與 Content-Type 一致）。
+輸入框：{}
+
+(4)按下SEND
+
+4.查詢SQL
+
+SELECT * FROM employee_data;

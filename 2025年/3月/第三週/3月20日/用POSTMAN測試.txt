@@ -17,9 +17,7 @@ Value: application/json
 選擇 raw 選項。
 在右側的下拉選單中選擇 JSON（確保與 Content-Type 一致）。
 在輸入框中輸入以下 JSON 數據：
-{
-    "COMPANY": "銀行"
-}
+{}
 
 點擊右上角的 Send 按鈕。
 {
