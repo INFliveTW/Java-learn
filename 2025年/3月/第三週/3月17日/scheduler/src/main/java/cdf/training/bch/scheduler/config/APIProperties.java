@@ -9,7 +9,7 @@ import lombok.Data;
 @Component // 添加此注解使其成為 Spring Bean
 @ConfigurationProperties(prefix = "spring.scheduler.api")
 public class APIProperties {
-    private String apiUrl;
+    private String url;
     private int timeout;
     private String timeoutMessage;
 }

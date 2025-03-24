@@ -5,10 +5,10 @@ spring:
   scheduler:
     interval: 5
     api:
-      url: "http://localhost:8081/api/data/extract"
+      url: "http://localhost:8081/api/employee-data"
       # http://localhost:8081/api/employee-data?Content-Type=application/json
-      timeout: 3
-      timeout-message: "回覆時間過長，請稍後再試！"
+      # timeout: 3
+      # timeout-message: "回覆時間過長，請稍後再試！"
 
 logging:
   charset:

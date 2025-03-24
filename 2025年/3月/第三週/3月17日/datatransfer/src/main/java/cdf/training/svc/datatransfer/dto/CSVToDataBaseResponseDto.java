@@ -3,7 +3,7 @@ package cdf.training.svc.datatransfer.dto;
 import lombok.Data;
 
 @Data
-public class CSVToDataBaseResponseDto {
+public class   CSVToDataBaseResponseDto {
     private String message;
 
     public CSVToDataBaseResponseDto(String message) {
