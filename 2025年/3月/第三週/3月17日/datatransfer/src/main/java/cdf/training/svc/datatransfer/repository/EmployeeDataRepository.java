@@ -1,10 +1,8 @@
-package cdf.training.svc.datatransfer.repository;
+// package cdf.training.svc.datatransfer.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+// import org.springframework.data.jpa.repository.JpaRepository;
 
-import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+// import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
 
-public interface EmployeeDataRepository extends JpaRepository<EmployeeDataEntity, String> 
-{
-
-}
+// public interface EmployeeDataRepository extends JpaRepository<EmployeeDataEntity, Long> {
+// }

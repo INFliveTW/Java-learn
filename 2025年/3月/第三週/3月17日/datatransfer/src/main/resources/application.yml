@@ -6,13 +6,6 @@ spring:
     username: sa
     password: 1QAZ2WSX3EDc4@
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.SQLServerDialect
 server:
   port: 8081
 sftp:
@@ -21,22 +14,6 @@ sftp:
   username: sa
   password: 1QAZ2WSX3EDc4@
   remote-dir: /upload
-# docker:
-#   mssql:
-#     image: mcr.microsoft.com/mssql/server:2019-latest
-#     ports: 
-#       - "1433:1433"
-#     environment:
-#       ACCEPT_EULA: "Y"
-#       SA_PASSWORD: "1QAZ2WSX3EDc4@"
-#       MSSQL_PID: "Express"
-#   sftp:
-#     image: atmoz/sftp
-#     ports:
-#       - "2222:22"
-#     command: "sa:1QAZ2WSX3EDc4@:1001::upload"
-#     volumes:
-#       - "./sftp-data:/upload"
 logging:
   level:
     root: INFO
