@@ -7,6 +7,8 @@
 
 並給予詳細說明與測試方式等...
 
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
+
 scheduler內容
 ├── src/
 │   ├── main/
@@ -25,8 +27,9 @@ scheduler內容
 │   │   └── resources/
 │   │       └── application.yml             # 排程與超時配置
 └── build.gradle                             # 依賴管理
- 
- 
+
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
+
 datatransfer內容
 ├── src/
 │   ├── main/
@@ -62,79 +65,1046 @@ datatransfer內容
 │               └── # 單元測試
 └── build.gradle
 
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
 
+---------------------
 先給scheduler內容
+---------------------
 
-SchedulerApplication      # 主應用程式啟動類
+------------------------------------------
+【SchedulerApplication】
+------------------------------------------
 
+------------------------------------------
 config/
+【APIProperties # API URL】
+------------------------------------------
 
-APIProperties # API URL
+------------------------------------------
+config/
+【ErrorMessage # 錯誤處理(集中)】
+------------------------------------------
 
+------------------------------------------
+config/
+【GlobalExceptionHandler # 異常處理(呼叫api時發生異常)】
+------------------------------------------
 
-ErrorMessage # 錯誤處理(集中)
+------------------------------------------
+config/
+【WebClientConfig      # WebClient 配置】
+------------------------------------------
 
-GlobalExceptionHandler # 異常處理(呼叫api時發生異常)
-
-WebClientConfig      # WebClient 配置
-
+------------------------------------------
 service/
+【DatatransferService #呼叫datatransfer的API去提取sftp的資料】
+------------------------------------------
 
-DatatransferService #呼叫datatransfer的API去提取sftp的資料
-
+------------------------------------------
 util/
+【WebClientUtil       # WebClient 重複邏輯封裝】
+------------------------------------------
 
-WebClientUtil       # WebClient 重複邏輯封裝
-
+------------------------------------------
 resources/
+【application.yml             # 排程與超時配置】
+------------------------------------------
 
-application.yml             # 排程與超時配置
+------------------------------------------
+【build.gradle】
+------------------------------------------
 
-build.gradle                             # 依賴管理
 
-接下來是 datatransfer內容
+---------------------
+再給datatransfer內容
+---------------------
 
-DatatransferApplication   # 主應用程式啟動類
+------------------------------------------
+【DatatransferApplication】
+------------------------------------------
 
-config/                   # 配置類
-DatabaseConfig       # 資料庫配置
+------------------------------------------
+config/
+【DatabaseConfig       # 資料庫配置】
+------------------------------------------
 
-ErrorMessage         # 錯誤處理(集中)
+------------------------------------------
+config/
+【ErrorMessage         # 錯誤處理(集中)】
+------------------------------------------
 
-SFTPConfig           # SFTP 客戶端配置
+------------------------------------------
+config/
+【SFTPConfig           # SFTP 客戶端配置】
+------------------------------------------
 
-controller/              # REST API 控制器
-EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)
+------------------------------------------
+controller/ 
+【EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)】
+------------------------------------------
 
+------------------------------------------
 dto/
-CSVToDataBaseResponseDto # Response (呼叫請求)
+【CSVToDataBaseResponseDto # Response (呼叫請求)】
+------------------------------------------
 
-CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳此
+------------------------------------------
+dto/
+【CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳此】
+------------------------------------------
 
-EmployeeDataCSVDto     #SFTP的CSV
+------------------------------------------
+dto/
+【EmployeeDataCSVDto     #SFTP的CSV】
+------------------------------------------
 
-entity/                      # 資料模型
+------------------------------------------
+entity/
+【EmployeeDataEntity      # 對應資料庫表的實體】
+------------------------------------------
 
-EmployeeDataEntity      # 對應資料庫表的實體
+------------------------------------------
+repository/
+【EmployeeDataRepository      # JPA 或 JDBC 存取資料庫】
+------------------------------------------
 
-repository/             # 資料庫存取層
-EmployeeDataRepository      # JPA 或 JDBC 存取資料庫
-
-service/                # 業務邏輯層
+------------------------------------------
+service/
 impl/
-CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error
+【CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error】
+------------------------------------------
 
-DataConverterImpl # EmployeeDataCSVDto轉換csv資料
+------------------------------------------
+service/
+impl/
+【DataConverterImpl # EmployeeDataCSVDto轉換csv資料】
+------------------------------------------
 
-SFTPServiceImpl # SFTP 讀取
+------------------------------------------
+service/
+impl/
+【SFTPServiceImpl # SFTP 讀取】
+------------------------------------------
 
-util/                   # 工具類
-CSVParserUtil       # CSV 解析工具
+------------------------------------------
+util/
+【CSVParserUtil       # CSV 解析工具】
+------------------------------------------
 
-WebClientUtil       # WebClient 重複邏輯封裝
+------------------------------------------
+util/
+【WebClientUtil       # WebClient 重複邏輯封裝】
+------------------------------------------
 
+------------------------------------------
 resources/
-application.yml             # 排程與超時配置
+【application.yml             # 排程與超時配置】
+------------------------------------------
 
-build.gradle
+------------------------------------------
+【build.gradle】
+------------------------------------------
 
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
+
+---------------------
+先給scheduler內容
+---------------------
+
+------------------------------------------
+【SchedulerApplication】
+------------------------------------------
+package cdf.training.bch.scheduler;
+
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SchedulerApplication {
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        System.setOut(new PrintStream(System.out, true, "UTF-8"));
+        System.out.println("Current encoding: " + Charset.defaultCharset().name());
+        SpringApplication.run(SchedulerApplication.class, args);
+    }
+}
+------------------------------------------
+config/
+【APIProperties # API URL】
+------------------------------------------
+package cdf.training.bch.scheduler.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import lombok.Data;
+
+@Data // Lombok 提供的 @Data 注解，自動生成 getter/setter 等方法
+@Component // 添加此注解使其成為 Spring Bean
+@ConfigurationProperties(prefix = "spring.scheduler.api")
+public class APIProperties {
+    private String url;
+    private int timeout;
+    private String timeoutMessage;
+}
+------------------------------------------
+config/
+【ErrorMessage # 錯誤處理(集中)】
+------------------------------------------
+package cdf.training.bch.scheduler.config;
+
+import lombok.Data;
+
+@Data
+public class ErrorMessage {
+    private int status;
+    private String message;
+    public ErrorMessage(int status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+}
+
+------------------------------------------
+config/
+【GlobalExceptionHandler # 異常處理(呼叫api時發生異常)】
+------------------------------------------
+package cdf.training.bch.scheduler.config;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
+import reactor.core.publisher.Mono;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(WebClientResponseException.class)
+    public Mono<ResponseEntity<ErrorMessage>> handleWebClientException(WebClientResponseException ex) {
+        HttpStatusCode statusCode = ex.getStatusCode();
+        HttpStatus status = HttpStatus.valueOf(statusCode.value());
+
+        String errorMessage;
+        System.err.println("response: " + ex.getResponseBodyAsString());
+
+        if (status.is4xxClientError()) {
+            if (status.value() == 400) {
+                System.out.println();
+                System.out.println("400錯誤訊息：");
+                errorMessage = "格式錯誤/參數驗證失敗";
+            } else if (status.value() == 404) {
+                System.out.println("404錯誤訊息：");
+                errorMessage = "找不到檔案";
+            } else {
+                errorMessage = "客戶端錯誤: " + status.value();
+            }
+        } else if (status.is5xxServerError()) {
+            errorMessage = "伺服器錯誤，請稍後再試";
+        } else {
+            errorMessage = "發生未預期的錯誤，請聯繫管理員";
+        }
+        System.out.println("錯誤status: " + status);
+        System.out.println("錯誤statusvalue: " + status.value());
+        ErrorMessage error = new ErrorMessage(status.value(), errorMessage);
+        
+        System.out.println("錯誤訊息: " + error);
+        return Mono.just(ResponseEntity.status(status).body(error));
+    }
+}
+------------------------------------------
+config/
+【WebClientConfig      # WebClient 配置】
+------------------------------------------
+package cdf.training.bch.scheduler.config;
+
+import java.time.Duration;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import reactor.netty.http.client.HttpClient;
+
+@Configuration //配置類，定義Bean
+//SchedulerApplication掃描相關
+public class WebClientConfig {
+    private final APIProperties apiProperties;
+    //注入apiProperties
+    //從application.yml讀取timeout
+    
+    public WebClientConfig(APIProperties apiProperties) {
+        this.apiProperties = apiProperties;
+    }
+    //@Bean：定義 WebClient 的 Bean
+
+    @Bean
+    public WebClient webClient() {
+        HttpClient httpClient = HttpClient.create()
+                .responseTimeout(Duration.ofSeconds(apiProperties.getTimeout())); // 從 APIProperties 獲取 timeout
+        //獲取timeout: 3秒
+        //影響DatatransferService的API呼叫
+
+        return WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+        //用來構建 WebClient
+    }
+}
+
+------------------------------------------
+service/
+【DatatransferService #呼叫datatransfer的API去提取sftp的資料】
+------------------------------------------
+package cdf.training.bch.scheduler.service;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import cdf.training.bch.scheduler.config.APIProperties;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+
+@Slf4j
+@Service //標記服務類型
+@EnableScheduling //啟用定時任務(5秒)
+//@Value //步驟1的初始化
+public class DatatransferService {
+    WebClient webClient;
+    APIProperties apiProperties;
+
+
+    public DatatransferService(WebClient webClient, APIProperties apiProperties) {
+        this.webClient = webClient;
+        this.apiProperties = apiProperties;
+    }
+    
+    @Scheduled(fixedRateString = "${spring.scheduler.interval}000") //每五秒執行(interval在application.yml)
+    public void callDatatransferApi() {
+        String randomCompany = List.of("金控", "銀行", "證券").get(new Random().nextInt(3));
+        //隨機選擇任一公司
+        Map<String, String> requestBody = Map.of(
+                "COMPANY", randomCompany,
+                "EXCUTE_TIME", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
+        );
+        log.info("🔍 API URL: {}", apiProperties.getUrl());
+        
+        webClient.post()
+                .uri(apiProperties.getUrl()) //目標URL
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(String.class) //獲取回應
+                .onErrorResume(throwable -> { //錯誤處理
+                    log.error("🚨 API 呼叫失敗：" + throwable.getMessage());
+                    log.info("🔍 API URL: {}", apiProperties.getUrl());
+
+                    // return Mono.just(apiProperties.getTimeoutMessage());
+                
+                    if(throwable instanceof java.util.concurrent.TimeoutException) {
+                        return  Mono.just(apiProperties.getTimeoutMessage());
+                    }
+                    return Mono.just(apiProperties.getTimeoutMessage());
+                })
+                .subscribe(result -> System.out.println("API 回應："+ result));
+    }
+}
+
+------------------------------------------
+util/
+【WebClientUtil       # WebClient 重複邏輯封裝】
+------------------------------------------
+package cdf.training.bch.scheduler.util; 
+
+public class WebClientUtil {
+
+}
+------------------------------------------
+resources/
+【application.yml             # 排程與超時配置】
+------------------------------------------
+spring:
+  application:
+    name: training-bch-scheduler
+
+  scheduler:
+    interval: 5 #幾秒呼叫一次API
+    api:
+      url: "http://localhost:8081/api/employee-data"
+      # http://localhost:8081/api/employee-data?Content-Type=application/json
+      timeout: 3 #API呼叫超時時間
+      timeout-message: "回覆時間過長，請稍後再試！"
+
+logging:
+  charset:
+    console: UTF-8
+      # 步驟4：Datatransfer接收
+      # 提供配置給 APIProperties 和 DatatransferService，步驟1
+------------------------------------------
+【build.gradle】
+------------------------------------------
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cdf.training.bch'
+version = '1.0.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+bootRun {
+    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8']
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
+
+
+---------------------
+再給datatransfer內容
+---------------------
+
+------------------------------------------
+【DatatransferApplication】
+------------------------------------------
+package cdf.training.svc.datatransfer;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DatatransferApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DatatransferApplication.class, args);
+	}
+
+}
+
+------------------------------------------
+config/
+【DatabaseConfig       # 資料庫配置】
+------------------------------------------
+// package cdf.training.svc.datatransfer.config;
+
+// import org.springframework.context.annotation.Configuration;
+
+// @Configuration
+// public class DatabaseConfig {
+//     // 目前無需額外配置，JdbcTemplate 會自動使用 application.yml 的 datasource
+//     // 可在此添加其他 JDBC 相關配置（如 DataSource 客製化），但這裡留空即可
+// }
+package cdf.training.svc.datatransfer.config;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@MapperScan(basePackages = "cdf.training.svc.datatransfer.repository")
+public class DatabaseConfig {
+
+}
+// @MapperScan：告訴 MyBatis 掃描指定的 Mapper 接口路徑（這裡是 repository 包）。
+// 移除 JPA 配置：不再需要 @EnableJpaRepositories。
+------------------------------------------
+config/
+【ErrorMessage         # 錯誤處理(集中)】
+------------------------------------------
+package cdf.training.svc.datatransfer.config;
+
+import lombok.Data;
+
+@Data
+public class ErrorMessage {
+    private int status;
+    private String message;
+    public ErrorMessage(int status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+}
+------------------------------------------
+config/
+【SFTPConfig           # SFTP 客戶端配置】
+------------------------------------------
+package cdf.training.svc.datatransfer.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
+
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "sftp")
+public class SFTPConfig {
+    private String host;
+    private int port;
+    private String username;
+    private String password;
+    private String remoteDir;
+}
+------------------------------------------
+controller/ 
+【EmployeeDataController       #(被呼叫時執行完成返回資料給scheduler)】
+------------------------------------------
+package cdf.training.svc.datatransfer.controller;
+
+import java.time.Duration;
+import java.time.Instant;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseResponseDto;
+import cdf.training.svc.datatransfer.service.impl.CSVToDataBaseServiceImpl;
+
+@RestController //標記為 REST 控制器
+@RequestMapping("/api")
+public class EmployeeDataController {
+    private final CSVToDataBaseServiceImpl csvToDataBaseService;
+
+    public EmployeeDataController(CSVToDataBaseServiceImpl csvToDataBaseService) {
+        this.csvToDataBaseService = csvToDataBaseService;
+    }
+    
+    @PostMapping("/employee-data") //處理 POST請求
+    public ResponseEntity<CSVToDataBaseResponseDto> processEmployeeData(@RequestBody CSVToDataBaseRequestDto request) {
+        // 記錄 API 呼叫前的時間
+        Instant startTime = Instant.now();
+        System.out.println("呼叫 API 前時間: " + startTime);
+
+        csvToDataBaseService.processCsvToDatabase(request); //調用服務處理
+
+        // 記錄 API 呼叫後的時間
+        Instant endTime = Instant.now();
+        System.out.println("呼叫 API 後時間: " + endTime);
+
+        // 計算時間差 (以秒為單位)
+        Duration duration = Duration.between(startTime, endTime);
+        double seconds = duration.toMillis() / 1000.0;
+        System.out.println("API 呼叫耗時: " + seconds + " 秒");
+        
+        return ResponseEntity.ok(new CSVToDataBaseResponseDto("資料處理成功"));
+    }
+}
+//步驟5：接收請求
+------------------------------------------
+dto/
+【CSVToDataBaseResponseDto # Response (呼叫請求)】
+------------------------------------------
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class CSVToDataBaseRequestDto {
+    private String COMPANY;
+    private String EXCUTETIME;
+}
+------------------------------------------
+dto/
+【CSVToDataBaseRequestDto # Request(回應請求) Scheduler呼叫controller後回傳此】
+------------------------------------------
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class   CSVToDataBaseResponseDto {
+    private String message;
+
+    public CSVToDataBaseResponseDto(String message) {
+        this.message = message;
+    }
+}
+------------------------------------------
+dto/
+【EmployeeDataCSVDto     #SFTP的CSV】
+------------------------------------------
+package cdf.training.svc.datatransfer.dto;
+
+import java.time.LocalDateTime;
+
+import lombok.Data;
+
+@Data
+public class EmployeeDataCSVDto {
+    private String ID;
+    private String DEPARTMENT;
+    private String JOB_TITLE;
+    private String NAME;
+    private String TEL;
+    private String EMAIL;
+    private String COMPANY;      // 新增欄位
+    private LocalDateTime EXCUTETIME; // 新增欄位
+}
+------------------------------------------
+entity/
+【EmployeeDataEntity      # 對應資料庫表的實體】
+------------------------------------------
+package cdf.training.svc.datatransfer.entity;
+
+import java.time.LocalDateTime;
+
+import lombok.Data;
+
+@Data
+public class EmployeeDataEntity {
+    private String ID; // CSV 中的 ID，普通欄位
+    private String DEPARTMENT;
+    private String JOB_TITLE;
+    private String NAME;
+    private String TEL;
+    private String EMAIL;
+    private String COMPANY;
+    private LocalDateTime EXCUTETIME;
+}
+//不需要 @Entity 或 @Id，因為 MyBatis 不依賴 JPA 的注解，而是一個純數據物件（POJO）。
+------------------------------------------
+repository/
+【EmployeeDataRepository      # JPA 或 JDBC 存取資料庫】
+------------------------------------------
+package cdf.training.svc.datatransfer.repository;
+
+//import org.springframework.data.jpa.repository.JpaRepository;
+
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+@Mapper
+public interface EmployeeDataRepository {
+    @Insert("INSERT INTO employee_data (ID, DEPARTMENT, JOB_TITLE, NAME, TEL, EMAIL, COMPANY, EXCUTETIME) " +
+            "VALUES (#{ID}, #{DEPARTMENT}, #{JOB_TITLE}, #{NAME}, #{TEL}, #{EMAIL}, #{COMPANY}, #{EXCUTETIME})")
+    void insert(EmployeeDataEntity entity);
+}
+//@Mapper：標記這是一個 MyBatis Mapper 接口。
+//@Insert：定義插入 SQL，#{} 用於從 EmployeeDataEntity 物件中取值。
+//無主鍵：MyBatis 不要求主鍵，這與你的需求一致。
+
+
+//public interface EmployeeDataRepository extends JpaRepository<EmployeeDataEntity, Long> {
+//}
+------------------------------------------
+service/
+impl/
+【CSVToDataBaseService         #SFTP讀取 > csv解析  > sql寫入 //try-catch error】
+------------------------------------------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+import cdf.training.svc.datatransfer.repository.EmployeeDataRepository;
+import cdf.training.svc.datatransfer.util.CSVParserUtil;
+
+@Service
+public class CSVToDataBaseServiceImpl {
+    private static final Logger logger = LoggerFactory.getLogger(CSVToDataBaseServiceImpl.class);
+    private final SFTPServiceImpl sftpService;
+    private final CSVParserUtil csvParserUtil;
+    private final DataConverterImpl dataConverter;
+    private final EmployeeDataRepository repository;
+
+    public CSVToDataBaseServiceImpl(SFTPServiceImpl sftpService, CSVParserUtil csvParserUtil,
+                                    DataConverterImpl dataConverter, EmployeeDataRepository repository) {
+        this.sftpService = sftpService;
+        this.csvParserUtil = csvParserUtil;
+        this.dataConverter = dataConverter;
+        this.repository = repository;
+    }
+
+    public void processCsvToDatabase(CSVToDataBaseRequestDto request) {
+        try {
+            String csvContent = sftpService.readFileFromSFTP("/upload/employee_data.csv");
+            logger.info("從 SFTP 讀取的 CSV 內容: {}", csvContent);
+
+            List<EmployeeDataCSVDto> csvDtos = csvParserUtil.parseCsv(csvContent);
+
+            String COMPANY = request.getCOMPANY() != null ? request.getCOMPANY() :
+                    List.of("金控", "銀行", "證券").get(new Random().nextInt(3));
+            String EXCUTETIMEStr = request.getEXCUTETIME() != null ? request.getEXCUTETIME() :
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime EXCUTETIME = LocalDateTime.parse(EXCUTETIMEStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+            List<EmployeeDataEntity> entities = dataConverter.convertToEntities(csvDtos, COMPANY, EXCUTETIME);
+
+            for (EmployeeDataEntity entity : entities) {
+                logger.info("準備寫入 SQL: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}, COMPANY={}, EXCUTETIME={}",
+                        entity.getID(), entity.getDEPARTMENT(), entity.getJOB_TITLE(), entity.getNAME(),
+                        entity.getTEL(), entity.getEMAIL(), entity.getCOMPANY(), entity.getEXCUTETIME());
+                repository.insert(entity); // 使用 MyBatis 插入
+            }
+
+            logger.info("成功新增 {} 筆資料到資料庫", entities.size());
+
+        } catch (Exception e) {
+            System.out.println("message : " + e.getMessage());
+            String errorMessage = e.getMessage().contains("SFTP") ? "無法連接到 SFTP 伺服器，請檢查配置或網路狀態" :
+                    e.getMessage().contains("parse") ? "CSV 檔案解析失敗，請確認檔案格式正確" :
+                            e.getMessage().contains("database") ? "資料庫寫入失敗，請檢查資料庫連線或權限" :
+                                    "發生未知錯誤：" + e.getMessage();
+            logger.error("將 CSV 傳輸到資料庫時出錯: {}", errorMessage);
+            throw new RuntimeException(errorMessage, e);
+        }
+    }
+}
+//步驟6：SFTP讀取
+------------------------------------------
+service/
+impl/
+【DataConverterImpl # EmployeeDataCSVDto轉換csv資料】
+------------------------------------------
+// package cdf.training.svc.datatransfer.service.impl;
+
+// import java.time.LocalDateTime;
+// import java.util.List;
+// import java.util.stream.Collectors;
+
+// import org.springframework.stereotype.Component;
+
+// import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+
+// @Component
+// public class DataConverterImpl {
+//     public List<EmployeeDataCSVDto> enrichCsvData(List<EmployeeDataCSVDto> dtos, String COMPANY, LocalDateTime EXCUTETIME) {
+//         return dtos.stream().map(dto -> {
+//             // 直接在 DTO 上設置 COMPANY 和 EXCUTETIME
+//             dto.setCOMPANY(COMPANY);      // 假設在 EmployeeDataCSVDto 中新增此欄位
+//             dto.setEXCUTETIME(EXCUTETIME); // 假設在 EmployeeDataCSVDto 中新增此欄位
+//             return dto;
+//         }).collect(Collectors.toList());
+//     }
+// }
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+@Component
+public class DataConverterImpl {
+    public List<EmployeeDataEntity> convertToEntities(List<EmployeeDataCSVDto> dtos, String COMPANY, LocalDateTime EXCUTETIME) {
+        return dtos.stream().map(dto -> {
+            EmployeeDataEntity entity = new EmployeeDataEntity();
+            entity.setID(dto.getID());
+            entity.setDEPARTMENT(dto.getDEPARTMENT());
+            entity.setJOB_TITLE(dto.getJOB_TITLE());
+            entity.setNAME(dto.getNAME());
+            entity.setTEL(dto.getTEL());
+            entity.setEMAIL(dto.getEMAIL());
+            entity.setCOMPANY(COMPANY);
+            entity.setEXCUTETIME(EXCUTETIME);
+            return entity;
+        }).collect(Collectors.toList());
+    }
+}
+------------------------------------------
+service/
+impl/
+【SFTPServiceImpl # SFTP 讀取】
+------------------------------------------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.io.InputStream;
+
+import org.springframework.stereotype.Service;
+
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+import cdf.training.svc.datatransfer.config.SFTPConfig;
+
+@Service
+public class SFTPServiceImpl {
+    private final SFTPConfig sftpConfig;
+    //注入SFTP
+    public SFTPServiceImpl(SFTPConfig sftpConfig) {
+        this.sftpConfig = sftpConfig;
+    }
+
+    public String readFileFromSFTP(String filePath) {
+        //讀取SFTP
+        try {
+            JSch jsch = new JSch();
+            //初始化 JSch
+            Session session = jsch.getSession(sftpConfig.getUsername(), sftpConfig.getHost(), sftpConfig.getPort());
+            //建立SFTP (使用 SFTPConfig配置)
+            session.setPassword(sftpConfig.getPassword());
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+            //連線到SFTP
+            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect(); //開啟SFTP通道
+            InputStream inputStream = channel.get(filePath);
+            String content = new String(inputStream.readAllBytes());
+            channel.disconnect();
+            session.disconnect(); //關閉連線
+            return content;
+        } catch (Exception e) {
+            throw new RuntimeException("SFTP error: " + e.getMessage(), e);
+        }
+    }
+}
+//步驟7：SFTP處理
+------------------------------------------
+util/
+【CSVParserUtil       # CSV 解析工具】
+------------------------------------------
+package cdf.training.svc.datatransfer.util;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+
+@Component
+public class CSVParserUtil {
+    private static final Logger logger = LoggerFactory.getLogger(CSVParserUtil.class);
+    
+    public List<EmployeeDataCSVDto> parseCsv(String csvContent) {
+        List<String> lines = Arrays.asList(csvContent.split("\n"));
+        if (lines.isEmpty()) {
+            throw new IllegalArgumentException("CSV 內容為空");
+        }
+
+        // 解析標題
+        String[] headers = lines.get(0).split(",");
+        Map<String, Integer> headerMap = new HashMap<>();
+        for (int i = 0; i < headers.length; i++) {
+            headerMap.put(headers[i].trim().toLowerCase(), i); // 忽略大小寫並去除空白
+        }
+
+        // 解析資料行
+        return lines.stream()
+                .skip(1) // 跳過標頭
+                .filter(line -> !line.trim().isEmpty()) // 過濾空行
+                .map(line -> {
+                    String[] fields = line.split(",");
+                    EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
+
+                    // 動態映射字段
+                    dto.setID(getFieldValue(fields, headerMap, "ID"));
+                    dto.setDEPARTMENT(getFieldValue(fields, headerMap, "DEPARTMENT"));
+                    dto.setJOB_TITLE(getFieldValue(fields, headerMap, "JOB_TITLE"));
+                    dto.setNAME(getFieldValue(fields, headerMap, "NAME"));
+                    dto.setTEL(getFieldValue(fields, headerMap, "TEL"));
+                    dto.setEMAIL(getFieldValue(fields, headerMap, "EMAIL"));
+
+                    logger.info("Parsed CSV data: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}",
+                            dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
+                            dto.getTEL(), dto.getEMAIL());
+                            
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    private String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
+        Integer index = headerMap.get(fieldName.toLowerCase());
+        return (index != null && index < fields.length) ? fields[index].trim() : null;
+    }
+}
+//步驟8：CSV解析
+------------------------------------------
+util/
+【WebClientUtil       # WebClient 重複邏輯封裝】
+------------------------------------------
+package cdf.training.svc.datatransfer.util;
+
+public class WebClientUtil {
+    
+}
+
+------------------------------------------
+resources/
+【application.yml             # 排程與超時配置】
+------------------------------------------
+spring:
+  application:
+    name: training-svc-data-transfer
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false;collation=Chinese_Taiwan_Stroke_CI_AS
+    username: sa
+    password: 1QAZ2WSX3EDc4@
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+server:
+  port: 8081
+sftp:
+  host: localhost
+  port: 2222
+  username: sa
+  password: 1QAZ2WSX3EDc4@
+  remote-dir: /upload
+logging:
+  level:
+    root: INFO
+    cdf.training.svc.datatransfer: DEBUG
+  charset:
+    console: UTF-8
+# spring:
+#   application:
+#     name: training-svc-data-transfer
+#   datasource:
+#     url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false;collation=Chinese_Taiwan_Stroke_CI_AS
+#     username: sa
+#     password: 1QAZ2WSX3EDc4@
+#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+# server:
+#   port: 8081
+# sftp:
+#   host: localhost
+#   port: 2222
+#   username: sa
+#   password: 1QAZ2WSX3EDc4@
+#   remote-dir: /upload
+# logging:
+#   level:
+#     root: INFO
+#     cdf.training.svc.datatransfer: DEBUG
+#   charset:
+#     console: UTF-8
+------------------------------------------
+【build.gradle】
+------------------------------------------
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cdf.training.svc'
+version = '1.0.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+// dependencies {
+// 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+// 	implementation 'org.springframework.boot:spring-boot-starter-web'
+// 	implementation 'com.jcraft:jsch:0.1.55'
+// 	implementation 'com.opencsv:opencsv:5.9'
+// 	implementation 'org.springframework.integration:spring-integration-sftp'
+//     implementation 'org.apache.commons:commons-csv:1.8'
+// 	compileOnly 'org.projectlombok:lombok'
+// 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+// 	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+// 	annotationProcessor 'org.projectlombok:lombok'
+
+// 	// 測試依賴
+//     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//     testImplementation 'org.mockito:mockito-core:5.12.0'  // Mockito 用於模擬
+//     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'  // 支援 JUnit 5
+//     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+// }
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.jcraft:jsch:0.1.55'
+    implementation 'com.opencsv:opencsv:5.9'
+    implementation 'org.springframework.integration:spring-integration-sftp'
+    implementation 'org.apache.commons:commons-csv:1.8'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    //implementation 'org.springframework.boot:spring-boot-starter-jdbc' // 添加 JDBC 支持
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-core:5.12.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>分隔線<><><><><><><><><><>
