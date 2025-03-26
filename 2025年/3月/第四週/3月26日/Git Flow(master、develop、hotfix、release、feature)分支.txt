@@ -1,0 +1,70 @@
+Git Flow(master、develop、hotfix、release、feature)分支
+-------------------------------------------------------------------------
+Develop分支(長分支，留存) - 測試開發
+開發初始內容放在這
+-------------------------------------------------------------------------
+Feature分支(任務結束後刪除) - 測試修改
+從 Develop分支 分出 Feature分支
+在 Feature分支 修改功能後 併回 Develop分支
+
+建立 Feature 分支：
+創建一個新分支，命名通常反映功能內容，例如 feature/add-sftp-file-check：
+```
+git checkout -b feature/add-sftp-file-check
+```
+這裡的 feature/ 前綴是慣例，表示這是一個功能分支。
+-------------------------------------------------------------------------
+Release分支(任務結束後刪除) - 待上線測試
+Develop分支 併到 Release分支
+測試完成後上線
+同時合併至 Develop分支 & Master分支
+Develop分支 是為了將最新版本同步
+-------------------------------------------------------------------------
+Master分支(長分支，留存) - 正式上線
+Commit打上版本標籤
+-------------------------------------------------------------------------
+Hotfix分支(任務結束後刪除) - 緊急問題
+從 Master分支 分出 Hotfix分支
+完成修復後 併回 Master分支
+同時合併一分到 Develop分支
+-------------------------------------------------------------------------
+建立 Pull Request（PR）：
+
+前往 GitHub/GitLab/Bitbucket 的專案頁面。
+點擊 "New Pull Request"：
+
+來源分支：feature/add-sftp-file-check
+目標分支：main
+
+填寫 PR 資訊：
+
+標題：例如 "Add SFTP file check functionality"
+描述：說明變更內容，例如 "在 CSVToDataBaseServiceImpl 中新增檔案存在性檢查，解決檔案不存在時的錯誤處理"。
+
+提交 PR，等待團隊審查。
+-------------------------------------------------------------------------
+
+以下是部署的原因，特別結合 feature 分支與 PR 的使用：
+-------------------------------------------------------------------------
+在 feature/add-sftp-file-check分支 修改內容後
+JAR文件：測試 /api/employee-data 是否返回 SFTP_FILE_NOT_FOUND 不存在時
+
+PR合併前，可分開進行分支測試
+
+CI/CD 流程中，部署 feature/add-sftp-file-check 到臨時環境
+檢查 Swagger UI 是否顯示正確的錯誤訊息。
+
+將feature分支 部屬到 測試環境 納入CI/CD流程
+
+PR 提交後：部署 feature 分支到臨時環境，供審查和測試。
+PR 合併後：將 main 分支部署到生產環境，正式上線。
+
+
+
+Feature 分支與 PR 建立
+流程：從 main 分出 feature 分支 → 開發 → 推送 → 發 PR → 審查 → 合併。
+原因：隔離變更、促進協作、確保品質、可回滾。
+
+
+通過 feature 分支開發新 API 端點（如 /api/employee-data 的 SFTP 檢查）
+然後在 PR 中測試部署，確保功能完善後合併到 main。
