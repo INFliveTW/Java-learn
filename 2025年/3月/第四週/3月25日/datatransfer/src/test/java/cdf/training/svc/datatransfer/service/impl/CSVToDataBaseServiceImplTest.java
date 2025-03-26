@@ -88,12 +88,13 @@ class CSVToDataBaseServiceImplTest {
     @Test
     void testProcessCsvToDatabase_CSVEmpty() {
         when(sftpService.readFileFromSFTP(anyString())).thenReturn("");
-    
+        
         CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
         Exception exception = assertThrows(RuntimeException.class, () -> {
             service.processCsvToDatabase(request);
         });
-        assertEquals("ErrorResponseDto(errorCode=UNKNOWN_ERROR, message=發生未知錯誤：SFTP，請確認SFTP)", exception.getMessage());
+        assertEquals("ErrorResponseDto(errorCode=UNKNOWN_ERROR, message=發生未知錯誤：SFTP 資料夾沒有CSV檔案，請確認SFTP)", 
+                     exception.getMessage());
         System.out.println("發生未知錯誤，測試成功"); // 測試通過時顯示
     }
 
