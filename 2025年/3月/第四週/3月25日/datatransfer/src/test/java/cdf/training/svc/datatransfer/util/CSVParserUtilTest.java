@@ -18,13 +18,13 @@ class CSVParserUtilTest {
         List<EmployeeDataCSVDto> dtos = csvParserUtil.parseCsv(csvContent);
         assertEquals(1, dtos.size());
         EmployeeDataCSVDto dto = dtos.get(0);
-        assertEquals("1", dto.getID());
-        assertEquals("IT", dto.getDEPARTMENT());
-        assertEquals("Engineer", dto.getJOB_TITLE());
-        assertEquals("John", dto.getNAME());
-        assertEquals("123456", dto.getTEL());
-        assertEquals("john@example.com", dto.getEMAIL());
-        System.out.println("測試成功"); // 測試通過時顯示
+        assertEquals("TW234121", dto.getID());
+        assertEquals("資安", dto.getDEPARTMENT());
+        assertEquals("工程師", dto.getJOB_TITLE());
+        assertEquals("陳亮", dto.getNAME());
+        assertEquals("02-1234-5678", dto.getTEL());
+        assertEquals("LightChen@gmail.com", dto.getEMAIL());
+        System.out.println("解析CSV，測試成功"); // 測試通過時顯示
     }
 
 @Test
@@ -32,7 +32,7 @@ void testParseCsv_EmptyContent() {
     String csvContent = "";
     List<EmployeeDataCSVDto> result = csvParserUtil.parseCsv(csvContent);
     assertTrue(result.isEmpty(), "應返回空列表");
-    System.out.println("測試成功"); // 測試通過時顯示
+    System.out.println("CSV資料為空，測試成功"); // 測試通過時顯示
 }
 
     @Test
@@ -41,9 +41,9 @@ void testParseCsv_EmptyContent() {
         List<EmployeeDataCSVDto> dtos = csvParserUtil.parseCsv(csvContent);
         assertEquals(1, dtos.size());
         EmployeeDataCSVDto dto = dtos.get(0);
-        assertEquals("1", dto.getID());
-        assertEquals("IT", dto.getDEPARTMENT());
+        assertEquals("TW234121", dto.getID());
+        assertEquals("資安", dto.getDEPARTMENT());
         assertNull(dto.getJOB_TITLE()); // 由於欄位不足，應為 null
-        System.out.println("測試成功"); // 測試通過時顯示
+        System.out.println("CSV欄位不正確，測試成功"); // 測試通過時顯示
     }
 }

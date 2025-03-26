@@ -32,7 +32,7 @@ class SFTPServiceImplTest {
         when(sftpConfig.getPassword()).thenReturn("1QAZ2WSX3EDc4@");
 
         assertDoesNotThrow(() -> sftpService.readFileFromSFTP("/upload/employee_data.csv"));
-        System.out.println("測試成功"); // 測試通過時顯示
+        System.out.println("連接SFTP，測試成功"); // 測試通過時顯示
     }
 
     @Test
@@ -46,7 +46,7 @@ class SFTPServiceImplTest {
             sftpService.readFileFromSFTP("/upload/employee_data.csv");
         });
         assertTrue(exception.getMessage().contains("SFTP error"));
-        System.out.println("測試成功"); // 測試通過時顯示
+        System.out.println("連接SFTP，測試成功"); // 測試通過時顯示
     }
 
     @Test
@@ -60,6 +60,6 @@ class SFTPServiceImplTest {
             sftpService.readFileFromSFTP("/upload/non_existent_file.csv");
         });
         assertTrue(exception.getMessage().contains("SFTP error"));
-        System.out.println("測試成功"); // 測試通過時顯示
+        System.out.println("找不到SFTP，測試成功"); // 測試通過時顯示
     }
 }

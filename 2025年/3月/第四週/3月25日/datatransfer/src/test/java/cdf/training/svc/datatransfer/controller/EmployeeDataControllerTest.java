@@ -48,17 +48,17 @@ class EmployeeDataControllerTest {
 
         doNothing().when(csvToDataBaseService).processCsvToDatabase(requestDto);
 
-        // Act & Assert
+        // Act & Assert //觸發API
         mockMvc.perform(post("/api/employee-data")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk());
         
         verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
-        System.out.println("測試成功"); // 測試通過時顯示
+        System.out.println("觸發API，測試成功"); // 測試通過時顯示
     }
 
-    @Test
+    @Test //觸發API失敗
     void testProcessEmployeeData_Exception() throws Exception {
         // Arrange
         CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
@@ -72,6 +72,6 @@ class EmployeeDataControllerTest {
                 .andExpect(status().isInternalServerError());
         
         verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
-        System.out.println("測試成功"); // 測試通過時顯示
+        System.out.println("觸發API失敗，測試成功"); // 測試通過時顯示
     }
 }
