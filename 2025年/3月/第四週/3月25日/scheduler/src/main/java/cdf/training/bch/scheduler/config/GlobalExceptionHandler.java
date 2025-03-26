@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
             if (status.value() == 400) {
                 System.out.println();
                 System.out.println("400錯誤訊息：");
-                errorMessage = "格式錯誤/參數驗證失敗";
+                errorMessage = "格式錯誤/驗證失敗";
             } else if (status.value() == 404) {
                 System.out.println("404錯誤訊息：");
                 errorMessage = "找不到檔案";
