@@ -1,0 +1,16 @@
+MATADATA:描述RESPONS
+
+STATUS
+ERROR CODE
+MESSAGE
+
+BaseResponse
+
+ErrorCode、Message改列舉enums
+
+server + error code return給controller正確的error code、而非回應500
+
+
+https://map.yahoo.co.jp/?lat=35.67717&lon=139.73750&zoom=13&maptype=basic
+
+https://map.yahoo.co.jp/

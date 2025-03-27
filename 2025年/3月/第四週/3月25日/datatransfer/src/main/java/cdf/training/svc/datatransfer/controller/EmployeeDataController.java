@@ -10,9 +10,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import cdf.training.svc.datatransfer.dto.BaseResponse;
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
 import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
 import cdf.training.svc.datatransfer.dto.CSVToDataBaseResponseDto;
-import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
 import cdf.training.svc.datatransfer.service.impl.CSVToDataBaseServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,26 +33,23 @@ public class EmployeeDataController {
 
     @Operation(summary = "處理員工資料", description = "從 SFTP 讀取 CSV 檔案並寫入SQL，無須輸入任何參數(因為COMPANY為隨機寫入)，直接Execute即可")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "0", description = "【範例(200)】資料處理成功\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"message\": \"資料處理成功\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "1", description = "【範例(500)】SFTP 伺服器拒絕訪問，請檢查權限\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"SFTP_PERMISSION_DENIED\", \"message\": \"SFTP 伺服器拒絕訪問，請檢查權限\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "2", description = "【範例(500)】SFTP 資料夾沒有CSV檔案，請確認SFTP\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"SFTP_FILE_NOT_FOUND\", \"message\": \"SFTP 資料夾沒有CSV檔案，請確認SFTP\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "3", description = "【範例(500)】CSV 檔案解析失敗，請確認檔案格式正確\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"CSV_PARSE_ERROR\", \"message\": \"CSV 檔案解析失敗，請確認檔案格式正確\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "4", description = "【範例(500)】CSV 檔案內容沒有任何資料，請確認文件內容\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"CSV_EMPTY_ERROR\", \"message\": \"CSV 檔案內容沒有任何資料，請確認文件內容\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "5", description = "【範例(500)】發生未知錯誤\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"UNKNOWN_ERROR\", \"message\": \"發生未知錯誤\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "6", description = "【範例(500)】無法連接到 SFTP 伺服器，請檢查配置或網路狀態\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"SFTP_CONNECTION_ERROR\", \"message\": \"無法連接到 SFTP 伺服器，請檢查配置或網路狀態\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "7", description = "【範例(500)】資料庫寫入失敗，請檢查資料庫連線或權限\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"errorCode\": \"DATABASE_ERROR\", \"message\": \"資料庫寫入失敗，請檢查資料庫連線或權限\", \"triggerTime\": \"2025/03/25 14:30:00\"}")))
+            @ApiResponse(responseCode = "200", description = "【範例(200)】資料處理成功\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"資料處理成功\", \"data\": {}, \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
+            @ApiResponse(responseCode = "403", description = "【範例(403)】SFTP 伺服器拒絕訪問，請檢查權限\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"403\", \"message\": \"SFTP 伺服器拒絕訪問，請檢查權限\", \"data\": null, \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
+            @ApiResponse(responseCode = "404", description = "【範例(404)】SFTP 資料夾沒有CSV檔案，請確認SFTP\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"404\", \"message\": \"SFTP 資料夾沒有CSV檔案，請確認SFTP\", \"data\": null, \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
+            @ApiResponse(responseCode = "400", description = "【範例(400)】CSV 檔案解析失敗，請確認檔案格式正確\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"400\", \"message\": \"CSV 檔案解析失敗，請確認檔案格式正確\", \"data\": null, \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
+            @ApiResponse(responseCode = "204", description = "【範例(204)】CSV 檔案內容沒有任何資料，請確認文件內容\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"204\", \"message\": \"CSV 檔案內容沒有任何資料，請確認文件內容\", \"data\": null, \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
+            @ApiResponse(responseCode = "500", description = "【範例(500)】發生未知錯誤\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"500\", \"message\": \"發生未知錯誤\", \"data\": null, \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
+            @ApiResponse(responseCode = "503", description = "【範例(503)】無法連接到 SFTP 伺服器，請檢查配置或網路狀態\n時間：YYYY/MM/DD HH:MM:SS",
+                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"503\", \"message\": \"無法連接到 SFTP 伺服器，請檢查配置或網路狀態\", \"data\": null, \"triggerTime\": \"2025/03/25 14:30:00\"}")))
     })
-    
     @PostMapping("/employee-data")
-    public ResponseEntity<?> processEmployeeData(@RequestBody CSVToDataBaseRequestDto request) {
+    public ResponseEntity<BaseResponse<?>> processEmployeeData(@RequestBody CSVToDataBaseRequestDto request) {
         Instant startTime = Instant.now();
         String formattedStartTime = formatter.format(startTime.atZone(java.time.ZoneId.systemDefault()));
         System.out.println("呼叫 API 前時間: " + formattedStartTime);
@@ -65,21 +63,30 @@ public class EmployeeDataController {
             double seconds = duration.toMillis() / 1000.0;
             System.out.println("API 呼叫耗時: " + seconds + " 秒");
 
-            CSVToDataBaseResponseDto response = new CSVToDataBaseResponseDto("資料處理成功");
-            response.setTriggerTime(formattedStartTime); // 設置觸發時間
-            return ResponseEntity.ok(response);
+            CSVToDataBaseResponseDto responseDto = new CSVToDataBaseResponseDto("資料處理成功");
+            return ResponseEntity.ok(new BaseResponse<>("資料處理成功", responseDto, formattedStartTime));
         } catch (RuntimeException e) {
-            ErrorResponseDto errorResponse;
+            ResponseCode errorCode;
+            String errorMessage;
+            String triggerTime = formattedStartTime;
             try {
-                errorResponse = new ErrorResponseDto(
-                        e.getMessage().split(",")[0].split("=")[1],
-                        e.getMessage().split(",")[1].split("=")[1].replace("}", "")
-                );
+                // 解析 ErrorResponseDto 的 toString() 格式
+                String[] parts = e.getMessage().split(", ");
+                String codePart = parts[0].replace("ErrorResponseDto(code=", "").trim();
+                String messagePart = parts[1].replace("message=", "").trim();
+                String triggerTimePart = parts.length > 2 ? parts[2].replace("triggerTime=", "").replace(")", "").trim() : null;
+
+                errorCode = ResponseCode.valueOf(codePart);
+                errorMessage = messagePart;
+                if (triggerTimePart != null && !triggerTimePart.equals("null")) {
+                    triggerTime = triggerTimePart; // 若異常中帶有 triggerTime，則使用
+                }
             } catch (Exception parseEx) {
-                errorResponse = new ErrorResponseDto("UNKNOWN_ERROR", "發生未知錯誤：" + e.getMessage());
+                errorCode = ResponseCode.UNKNOWN_ERROR;
+                errorMessage = "發生未知錯誤：" + e.getMessage();
             }
-            errorResponse.setTriggerTime(formattedStartTime); // 設置觸發時間
-            return ResponseEntity.status(500).body(errorResponse);
+            return ResponseEntity.status(500)
+                    .body(new BaseResponse<>(errorCode, errorMessage, triggerTime));
         }
     }
 }

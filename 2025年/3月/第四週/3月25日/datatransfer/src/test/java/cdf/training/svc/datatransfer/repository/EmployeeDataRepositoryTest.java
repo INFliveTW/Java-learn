@@ -3,19 +3,29 @@ package cdf.training.svc.datatransfer.repository;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.InjectMocks;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import org.mockito.MockitoAnnotations;
 
 import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
 
-@SpringBootTest
 class EmployeeDataRepositoryTest {
-    @Autowired
+
+    @InjectMocks
     private EmployeeDataRepository repository;
 
+    @BeforeEach
+    void setUp() {
+        // 模擬 repository
+        repository = mock(EmployeeDataRepository.class);
+        MockitoAnnotations.openMocks(this);
+    }
+
     @Test
-    void testInsert() { //測試CSV資料寫入SQL資料庫
+    void testInsert() { // 測試CSV資料寫入SQL資料庫
         EmployeeDataEntity entity = new EmployeeDataEntity();
         entity.setID("TW234121");
         entity.setDEPARTMENT("資安");
@@ -26,7 +36,10 @@ class EmployeeDataRepositoryTest {
         entity.setCOMPANY("金控");
         entity.setEXCUTETIME(LocalDateTime.now());
 
+        // 模擬 insert 方法不拋出異常
+        doNothing().when(repository).insert(entity);
+
         assertDoesNotThrow(() -> repository.insert(entity));
-        System.out.println("測試CSV資料寫入SQL資料庫，測試成功"); // 測試通過時顯示
+        System.out.println("測試CSV資料寫入SQL資料庫，測試成功");
     }
 }

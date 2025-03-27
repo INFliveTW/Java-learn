@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
 import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
 import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
 import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
@@ -34,27 +35,28 @@ public class CSVToDataBaseServiceImpl {
 
     public void processCsvToDatabase(CSVToDataBaseRequestDto request) {
         try {
-            // 嘗試讀取檔案
             String csvContent;
             try {
                 csvContent = sftpService.readFileFromSFTP("/upload/employee_data.csv");
                 if (csvContent == null || csvContent.trim().isEmpty()) {
-                    throw new RuntimeException("file not found: SFTP 資料夾沒有CSV檔案，請確認SFTP");
+                    throw new RuntimeException(
+                            new ErrorResponseDto(ResponseCode.SFTP_FILE_NOT_FOUND, null).toString());
                 }
             } catch (Exception e) {
-                // 若異常訊息表示檔案不存在，則拋出明確的 file not found 錯誤
                 String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
                 if (msg.contains("no such file") || msg.contains("file not found") || msg.contains("not exist")) {
-                    throw new RuntimeException("file not found: SFTP 資料夾沒有CSV檔案，請確認SFTP");
+                    throw new RuntimeException(
+                            new ErrorResponseDto(ResponseCode.SFTP_FILE_NOT_FOUND, null).toString());
                 }
-                throw e; // 其他異常繼續拋出，例如連接錯誤
+                throw e;
             }
 
             logger.info("從 SFTP 讀取的 CSV 內容: {}", csvContent);
 
             List<EmployeeDataCSVDto> csvDtos = csvParserUtil.parseCsv(csvContent);
             if (csvDtos.isEmpty()) {
-                throw new RuntimeException("CSV content is empty: CSV 內容為空，請確認文件內容");
+                throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_EMPTY_ERROR, null).toString());
             }
 
             String COMPANY = request.getCOMPANY() != null ? request.getCOMPANY() :
@@ -75,38 +77,34 @@ public class CSVToDataBaseServiceImpl {
             logger.info("成功新增 {} 筆資料到資料庫", entities.size());
 
         } catch (Exception e) {
-            String errorCode;
+            ResponseCode errorCode;
             String errorMessage;
             String exceptionMessage = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
 
             switch (exceptionMessage) {
-                case String msg when msg.contains("file not found") -> { // 檔案不存在
-                    errorCode = "SFTP_FILE_NOT_FOUND";
-                    errorMessage = "SFTP 資料夾沒有CSV檔案，請確認SFTP";
+                case String msg when msg.contains("file not found") -> {
+                    errorCode = ResponseCode.SFTP_FILE_NOT_FOUND;
+                    errorMessage = ResponseCode.SFTP_FILE_NOT_FOUND.getDefaultMessage();
                 }
-                case String msg when msg.contains("sftp permission denied") -> { // 權限問題
-                    errorCode = "SFTP_PERMISSION_DENIED";
-                    errorMessage = "SFTP 伺服器拒絕訪問，請檢查權限";
+                case String msg when msg.contains("sftp permission denied") -> {
+                    errorCode = ResponseCode.SFTP_PERMISSION_DENIED;
+                    errorMessage = ResponseCode.SFTP_PERMISSION_DENIED.getDefaultMessage();
                 }
-                case String msg when msg.contains("sftp error") && !msg.contains("file not found") -> { // 連接錯誤
-                    errorCode = "SFTP_CONNECTION_ERROR";
-                    errorMessage = "無法連接到 SFTP 伺服器，請檢查配置或網路狀態";
+                case String msg when msg.contains("sftp error") && !msg.contains("file not found") -> {
+                    errorCode = ResponseCode.SFTP_CONNECTION_ERROR;
+                    errorMessage = ResponseCode.SFTP_CONNECTION_ERROR.getDefaultMessage();
                 }
-                case String msg when msg.contains("csv content is empty") -> { // CSV 內容為空
-                    errorCode = "CSV_EMPTY_ERROR";
-                    errorMessage = "CSV 檔案內容沒有任何資料，請確認文件內容";
+                case String msg when msg.contains("csv content is empty") -> {
+                    errorCode = ResponseCode.CSV_EMPTY_ERROR;
+                    errorMessage = ResponseCode.CSV_EMPTY_ERROR.getDefaultMessage();
                 }
-                case String msg when msg.contains("parse") -> { // 解析錯誤
-                    errorCode = "CSV_PARSE_ERROR";
-                    errorMessage = "CSV 檔案解析失敗，請確認檔案格式正確";
-                }
-                case String msg when msg.contains("database") -> { // 資料庫錯誤
-                    errorCode = "DATABASE_ERROR";
-                    errorMessage = "資料庫寫入失敗，請檢查資料庫連線或權限";
+                case String msg when msg.contains("parse") -> {
+                    errorCode = ResponseCode.CSV_PARSE_ERROR;
+                    errorMessage = ResponseCode.CSV_PARSE_ERROR.getDefaultMessage();
                 }
                 default -> {
-                    errorCode = "UNKNOWN_ERROR";
-                    errorMessage = "發生未知錯誤：" + e.getMessage();
+                    errorCode = ResponseCode.UNKNOWN_ERROR;
+                    errorMessage = ResponseCode.UNKNOWN_ERROR.getDefaultMessage() + ": " + e.getMessage();
                 }
             }
 
