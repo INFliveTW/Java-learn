@@ -31,22 +31,32 @@ public class EmployeeDataController {
         this.csvToDataBaseService = csvToDataBaseService;
     }
 
-    @Operation(summary = "處理員工資料", description = "從 SFTP 讀取 CSV 檔案並寫入SQL，無須輸入任何參數(因為COMPANY為隨機寫入)，直接Execute即可")
+    @Operation(summary = "處理員工資料", description = "從 SFTP 讀取 CSV 檔案並寫入SQL，返回處理結果")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "0", description = "【範例(200)】資料處理成功\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"資料處理成功\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "1", description = "【範例(200)】SFTP 伺服器拒絕訪問，請檢查權限\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"SFTP 伺服器拒絕訪問，請檢查權限\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "2", description = "【範例(200)】SFTP 資料夾沒有CSV檔案，請確認SFTP\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"SFTP 資料夾沒有CSV檔案，請確認SFTP\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "3", description = "【範例(200)】CSV 檔案解析失敗，請確認檔案格式正確\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"CSV 檔案解析失敗，請確認檔案格式正確\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "4", description = "【範例(200)】CSV 檔案內容沒有任何資料，請確認文件內容\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"CSV 檔案內容沒有任何資料，請確認文件內容\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "5", description = "【範例(500)】發生未知錯誤\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"500\", \"message\": \"發生未知錯誤\", \"triggerTime\": \"2025/03/25 14:30:00\"}"))),
-            @ApiResponse(responseCode = "6", description = "【範例(200)】無法連接到 SFTP 伺服器，請檢查配置或網路狀態\n時間：YYYY/MM/DD HH:MM:SS",
-                    content = @Content(examples = @ExampleObject(value = "{\"code\": \"200\", \"message\": \"無法連接到 SFTP 伺服器，請檢查配置或網路狀態\", \"triggerTime\": \"2025/03/25 14:30:00\"}")))
+            @ApiResponse(responseCode = "200", description = "成功執行：\n" +
+                    "\n**透過選項查看範例**", // 新增自訂文字
+                    content = @Content(examples = {
+                            @ExampleObject(name = "資料處理成功", value = "{\"code\": \"200\", \"message\": \"資料處理成功\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "SFTP 伺服器拒絕訪問", value = "{\"code\": \"200\", \"message\": \"SFTP 伺服器拒絕訪問，請檢查權限\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "SFTP 資料夾沒有CSV檔案", value = "{\"code\": \"200\", \"message\": \"SFTP 資料夾沒有CSV檔案，請確認SFTP\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "CSV 檔案解析失敗", value = "{\"code\": \"200\", \"message\": \"CSV 檔案解析失敗，請確認檔案格式正確\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "CSV 檔案內容沒有任何資料", value = "{\"code\": \"200\", \"message\": \"CSV 檔案內容沒有任何資料，請確認文件內容\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "CSV檔案，欄位缺少", value = "{\"code\": \"200\", \"message\": \"CSV檔案，欄位缺少，請確認檔案\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "CSV檔案，資料缺少", value = "{\"code\": \"200\", \"message\": \"CSV檔案，資料缺少，請確認檔案\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "資料庫寫入失敗", value = "{\"code\": \"200\", \"message\": \"資料庫寫入失敗，請檢查資料庫連線或權限\", \"triggerTime\": \"2025/03/25 14:30:00\"}")
+                        })
+                        ),//資料庫寫入失敗，請檢查資料庫連線或權限
+            @ApiResponse(responseCode = "500", description = "錯誤：\n" +
+                    "\n**透過選項查看範例**", // 新增自訂文字
+                    content = @Content(examples = {
+                            @ExampleObject(name = "發生未知錯誤", value = "{\"code\": \"500\", \"message\": \"發生未知錯誤\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "無法連接到 SFTP 伺服器", value = "{\"code\": \"500\", \"message\": \"無法連接到 SFTP 伺服器，請檢查配置或網路狀態\", \"triggerTime\": \"2025/03/25 14:30:00\"}"),
+                            @ExampleObject(name = "無法連線到資料庫", value = "{\"code\": \"500\", \"message\": \"無法連線到資料庫，請檢查配置或網路狀態\", \"triggerTime\": \"2025/03/25 14:30:00\"}")
+                        })
+                        )
+                        
+                    //@ApiResponse(responseCode = "500", description = "發生未知錯誤\n時間：YYYY/MM/DD HH:MM:SS",
+                    //content = @Content(examples = @ExampleObject(value = "{\"code\": \"500\", \"message\": \"發生未知錯誤\", \"triggerTime\": \"2025/03/25 14:30:00\"}")))
     })
     @PostMapping("/employee-data")
     public ResponseEntity<BaseResponse> processEmployeeData(@RequestBody CSVToDataBaseRequestDto request) {

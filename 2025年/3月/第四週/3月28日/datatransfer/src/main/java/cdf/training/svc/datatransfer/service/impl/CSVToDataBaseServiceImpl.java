@@ -45,12 +45,10 @@ public class CSVToDataBaseServiceImpl {
                                                  null).toString());
                 }
             } catch (Exception e) {
-                // 如果 SFTPServiceImpl 已拋出 ErrorResponseDto，直接傳遞
                 String msg = e.getMessage();
                 if (msg != null && msg.startsWith("ErrorResponseDto(code=")) {
                     throw new RuntimeException(msg);
                 }
-                // 否則轉換為未知錯誤
                 throw new RuntimeException(
                         new ErrorResponseDto(ResponseCode.UNKNOWN_ERROR.getCode(),
                                              ResponseCode.UNKNOWN_ERROR.getDefaultMessage() + ": " + e.getMessage(),
@@ -79,7 +77,22 @@ public class CSVToDataBaseServiceImpl {
                 logger.info("準備寫入 SQL: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}, COMPANY={}, EXCUTETIME={}",
                         entity.getID(), entity.getDEPARTMENT(), entity.getJOB_TITLE(), entity.getNAME(),
                         entity.getTEL(), entity.getEMAIL(), entity.getCOMPANY(), entity.getEXCUTETIME());
-                repository.insert(entity);
+                try {
+                    repository.insert(entity);
+                } catch (Exception sqlEx) {
+                    String msg = sqlEx.getMessage() != null ? sqlEx.getMessage().toLowerCase() : "";
+                    if (msg.contains("connection") || msg.contains("cannot connect") || msg.contains("communications link failure")) {
+                        throw new RuntimeException(
+                                new ErrorResponseDto(ResponseCode.SQL_CONNECTION_ERROR.getCode(),
+                                                     ResponseCode.SQL_CONNECTION_ERROR.getDefaultMessage(),
+                                                     null).toString());
+                    }
+                    // 其他資料庫錯誤（例如權限問題、主鍵衝突等）使用 SQL_WRITE_ERROR
+                    throw new RuntimeException(
+                            new ErrorResponseDto(ResponseCode.SQL_WRITE_ERROR.getCode(),
+                                                 ResponseCode.SQL_WRITE_ERROR.getDefaultMessage(),
+                                                 null).toString());
+                }
             }
 
             logger.info("成功新增 {} 筆資料到資料庫", entities.size());
@@ -87,9 +100,8 @@ public class CSVToDataBaseServiceImpl {
         } catch (Exception e) {
             String exceptionMessage = e.getMessage();
             if (exceptionMessage != null && exceptionMessage.startsWith("ErrorResponseDto(code=")) {
-                throw new RuntimeException(exceptionMessage); // 直接傳遞已格式化的異常
+                throw new RuntimeException(exceptionMessage);
             }
-            // 其他未預期的異常轉為 UNKNOWN_ERROR
             logger.error("將 CSV 傳輸到資料庫時出錯: {}", e.getMessage());
             throw new RuntimeException(
                     new ErrorResponseDto(ResponseCode.UNKNOWN_ERROR.getCode(),

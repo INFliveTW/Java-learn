@@ -1,0 +1,29 @@
+BaseResponse
+
+@Schema(description = "Response物件")
+public class BaseResponse {
+
+ @Schema(description = "回覆狀態物件")
+ private Metadata metadata;
+
+ @Schema(description = "回傳資料")
+ private Object data;
+
+
+Metadata
+
+@Schema(description = "回覆狀態物件")
+public class Metadata {
+
+ @Schema(description = "回覆狀態")
+ private Boolean status; 
+
+ @Schema(description = "錯誤代碼")
+ private String errorCode;
+
+ @Schema(description = "錯誤說明")
+ private String errorDesc;
+
+
+
+

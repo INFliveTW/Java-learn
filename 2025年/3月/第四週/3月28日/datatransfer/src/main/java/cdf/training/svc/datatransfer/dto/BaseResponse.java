@@ -24,13 +24,18 @@ public class BaseResponse{
 
     // 定義回應碼的枚舉
     public enum ResponseCode {
-        SUCCESS("200", "成功"),
+        SUCCESS("200", "資料處理成功"),
         SFTP_PERMISSION_DENIED("200", "SFTP 伺服器拒絕訪問，請檢查權限"),
         SFTP_FILE_NOT_FOUND("200", "SFTP 資料夾沒有CSV檔案，請確認SFTP"),
         CSV_PARSE_ERROR("200", "CSV 檔案解析失敗，請確認檔案格式正確"),
         CSV_EMPTY_ERROR("200", "CSV 檔案內容沒有任何資料，請確認文件內容"),
-        UNKNOWN_ERROR("500", "發生未知錯誤"),
-        SFTP_CONNECTION_ERROR("200", "無法連接到 SFTP 伺服器，請檢查配置或網路狀態");
+        CSV_MISSING_FIELDS("200", "CSV檔案，欄位缺少，請確認檔案"),
+        CSV_MISSING_DATA("200", "CSV檔案，資料缺少，請確認檔案"),
+        SFTP_CONNECTION_ERROR("500", "無法連接到 SFTP 伺服器，請檢查配置或網路狀態"),
+        SQL_CONNECTION_ERROR("500", "無法連線到資料庫，請檢查配置或網路狀態"),
+        SQL_WRITE_ERROR("500", "資料庫寫入失敗，請檢查資料庫連線或權限"),
+        UNKNOWN_ERROR("500", "發生未知錯誤");
+        
 
         private final String code;
         private final String defaultMessage;

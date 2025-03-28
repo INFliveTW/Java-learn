@@ -10,7 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
 import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
 
 @Component
 public class CSVParserUtil {
@@ -29,8 +31,19 @@ public class CSVParserUtil {
             headerMap.put(headers[i].trim().toLowerCase(), i); // 忽略大小寫並去除空白
         }
 
-        // 解析資料行
-        return lines.stream()
+        // 檢查必要欄位
+        String[] requiredFields = {"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"};
+        for (String field : requiredFields) {
+            if (!headerMap.containsKey(field.toLowerCase())) {
+                throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_MISSING_FIELDS.getCode(),
+                                             ResponseCode.CSV_MISSING_FIELDS.getDefaultMessage(),
+                                             null).toString());
+            }
+        }
+
+        // 解析資料行並檢查資料是否缺失
+        List<EmployeeDataCSVDto> dtos = lines.stream()
                 .skip(1) // 跳過標頭
                 .filter(line -> !line.trim().isEmpty()) // 過濾空行
                 .map(line -> {
@@ -45,6 +58,19 @@ public class CSVParserUtil {
                     dto.setTEL(getFieldValue(fields, headerMap, "TEL"));
                     dto.setEMAIL(getFieldValue(fields, headerMap, "EMAIL"));
 
+                    // 檢查必要資料是否缺失
+                    if (dto.getID() == null || dto.getID().trim().isEmpty() ||
+                        dto.getDEPARTMENT() == null || dto.getDEPARTMENT().trim().isEmpty() ||
+                        dto.getJOB_TITLE() == null || dto.getJOB_TITLE().trim().isEmpty() ||
+                        dto.getNAME() == null || dto.getNAME().trim().isEmpty() ||
+                        dto.getTEL() == null || dto.getTEL().trim().isEmpty() ||
+                        dto.getEMAIL() == null || dto.getEMAIL().trim().isEmpty()) {
+                        throw new RuntimeException(
+                                new ErrorResponseDto(ResponseCode.CSV_MISSING_DATA.getCode(),
+                                                     ResponseCode.CSV_MISSING_DATA.getDefaultMessage(),
+                                                     null).toString());
+                    }
+
                     logger.info("Parsed CSV data: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}",
                             dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
                             dto.getTEL(), dto.getEMAIL());
@@ -52,6 +78,8 @@ public class CSVParserUtil {
                     return dto;
                 })
                 .collect(Collectors.toList());
+
+        return dtos;
     }
 
     private String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
