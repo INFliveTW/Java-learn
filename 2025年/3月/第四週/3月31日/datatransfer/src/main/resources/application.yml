@@ -11,7 +11,7 @@ server:
 sftp:
   host: localhost
   port: 2222
-  username: sa
+  username: sa #預設帳號
   password: 1QAZ2WSX3EDc4@
   remote-dir: /upload
 logging:
