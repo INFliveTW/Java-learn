@@ -23,25 +23,6 @@ repositories {
 	mavenCentral()
 }
 
-// dependencies {
-// 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-// 	implementation 'org.springframework.boot:spring-boot-starter-web'
-// 	implementation 'com.jcraft:jsch:0.1.55'
-// 	implementation 'com.opencsv:opencsv:5.9'
-// 	implementation 'org.springframework.integration:spring-integration-sftp'
-//     implementation 'org.apache.commons:commons-csv:1.8'
-// 	compileOnly 'org.projectlombok:lombok'
-// 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-// 	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-// 	annotationProcessor 'org.projectlombok:lombok'
-
-// 	// 測試依賴
-//     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-//     testImplementation 'org.mockito:mockito-core:5.12.0'  // Mockito 用於模擬
-//     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'  // 支援 JUnit 5
-//     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-// }
-
 dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -50,7 +31,6 @@ dependencies {
     implementation 'org.springframework.integration:spring-integration-sftp'
     implementation 'org.apache.commons:commons-csv:1.8'
     implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
-    //implementation 'org.springframework.boot:spring-boot-starter-jdbc' // 添加 JDBC 支持
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'

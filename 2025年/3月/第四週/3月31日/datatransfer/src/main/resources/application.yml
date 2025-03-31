@@ -20,25 +20,3 @@ logging:
     cdf.training.svc.datatransfer: DEBUG
   charset:
     console: UTF-8
-# spring:
-#   application:
-#     name: training-svc-data-transfer
-#   datasource:
-#     url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false;collation=Chinese_Taiwan_Stroke_CI_AS
-#     username: sa
-#     password: 1QAZ2WSX3EDc4@
-#     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
-# server:
-#   port: 8081
-# sftp:
-#   host: localhost
-#   port: 2222
-#   username: sa
-#   password: 1QAZ2WSX3EDc4@
-#   remote-dir: /upload
-# logging:
-#   level:
-#     root: INFO
-#     cdf.training.svc.datatransfer: DEBUG
-#   charset:
-#     console: UTF-8

@@ -1,5 +1,6 @@
 package cdf.training.svc.datatransfer.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -13,6 +14,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 
@@ -45,7 +47,8 @@ class CSVToDataBaseServiceImplTest {
 
     @Test
     void testProcessCsvToDatabase_Success() {
-        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT\n1,IT");
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com");
         when(csvParserUtil.parseCsv(anyString())).thenReturn(List.of(new EmployeeDataCSVDto()));
         when(dataConverter.convertToEntities(anyList(), anyString(), any())).thenReturn(List.of(new EmployeeDataEntity()));
         doNothing().when(repository).insert(any());
@@ -54,60 +57,121 @@ class CSVToDataBaseServiceImplTest {
         request.setCOMPANY("金控");
         request.setEXCUTETIME("2025-03-20 15:30:45");
 
+        // Act & Assert
         assertDoesNotThrow(() -> service.processCsvToDatabase(request));
-        System.out.println("COMPANY與時間戳記寫入SQL測試成功"); // 測試通過時顯示
+        System.out.println("COMPANY與時間戳記寫入SQL測試成功");
     }
 
     @Test
     void testProcessCsvToDatabase_SFTPConnectionFailure() {
-        when(sftpService.readFileFromSFTP(anyString())).thenThrow(new RuntimeException("SFTP error"));
-    
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString()))
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=SFTP_003, message=無法連接到 SFTP 伺服器，請檢查配置或網路狀態, triggerTime=null)"));
+
         CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             service.processCsvToDatabase(request);
         });
-        assertEquals("ErrorResponseDto(errorCode=SFTP_CONNECTION_ERROR, message=無法連接到 SFTP 伺服器，請檢查配置或網路狀態, triggerTime=null)", 
+        assertEquals("ErrorResponseDto(code=SFTP_003, message=無法連接到 SFTP 伺服器，請檢查配置或網路狀態, triggerTime=null)", 
                      exception.getMessage());
-        System.out.println("無法連接到 SFTP 伺服器，測試成功"); // 測試通過時顯示
+        System.out.println("無法連接到 SFTP 伺服器，測試成功");
     }
 
     @Test
     void testProcessCsvToDatabase_SFTPFileNotFound() {
-        when(sftpService.readFileFromSFTP(anyString())).thenThrow(new RuntimeException("SFTP error: file not found"));
-    
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString()))
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)"));
+
         CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             service.processCsvToDatabase(request);
         });
-        assertEquals("ErrorResponseDto(errorCode=SFTP_FILE_NOT_FOUND, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
+        assertEquals("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
                      exception.getMessage());
-        System.out.println("資料夾沒有CSV檔案，測試成功"); // 測試通過時顯示
+        System.out.println("資料夾沒有CSV檔案，測試成功");
     }
 
     @Test
     void testProcessCsvToDatabase_CSVEmpty() {
+        // Arrange
         when(sftpService.readFileFromSFTP(anyString())).thenReturn("");
         
         CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             service.processCsvToDatabase(request);
         });
-        assertEquals("ErrorResponseDto(errorCode=SFTP_FILE_NOT_FOUND, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
+        assertEquals("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
                      exception.getMessage());
-        System.out.println("SFTP 資料夾沒有CSV檔案，測試成功"); // 測試通過時顯示
+        System.out.println("SFTP 資料夾沒有CSV檔案，測試成功");
     }
 
     @Test
     void testProcessCsvToDatabase_CSVInvalidFormat() {
+        // Arrange
         when(sftpService.readFileFromSFTP(anyString())).thenReturn("invalid content");
-        when(csvParserUtil.parseCsv(anyString())).thenThrow(new IllegalArgumentException("CSV parse error"));
+        when(csvParserUtil.parseCsv(anyString()))
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案, triggerTime=null)"));
     
         CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
         Exception exception = assertThrows(RuntimeException.class, () -> {
             service.processCsvToDatabase(request);
         });
-        assertEquals("ErrorResponseDto(errorCode=CSV_PARSE_ERROR, message=CSV 檔案解析失敗，請確認檔案格式正確, triggerTime=null)", 
+        assertEquals("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案, triggerTime=null)", 
                      exception.getMessage());
-        System.out.println("檔案解析失敗，測試成功"); // 測試通過時顯示
+        System.out.println("檔案解析失敗，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_DatabaseConnectionFailure() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com");
+        when(csvParserUtil.parseCsv(anyString())).thenReturn(List.of(new EmployeeDataCSVDto()));
+        when(dataConverter.convertToEntities(anyList(), anyString(), any())).thenReturn(List.of(new EmployeeDataEntity()));
+        // 模擬資料庫連線失敗，拋出包含 "connection refused" 的異常訊息
+        doThrow(new RuntimeException("Connection refused: connect"))
+                .when(repository).insert(any());
+    
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+        request.setCOMPANY("金控");
+        request.setEXCUTETIME("2025-03-20 15:30:45");
+    
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SQL_001, message=無法連線到資料庫，請檢查配置或網路狀態, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("無法連線到資料庫，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_DatabaseWriteFailure() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com");
+        when(csvParserUtil.parseCsv(anyString())).thenReturn(List.of(new EmployeeDataCSVDto()));
+        when(dataConverter.convertToEntities(anyList(), anyString(), any())).thenReturn(List.of(new EmployeeDataEntity()));
+        doThrow(new RuntimeException("ErrorResponseDto(code=SQL_002, message=資料庫寫入失敗，請檢查資料庫連線或權限, triggerTime=null)"))
+                .when(repository).insert(any());
+
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+        request.setCOMPANY("金控");
+        request.setEXCUTETIME("2025-03-20 15:30:45");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SQL_002, message=資料庫寫入失敗，請檢查資料庫連線或權限, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("資料庫寫入失敗，測試成功");
     }
 }
