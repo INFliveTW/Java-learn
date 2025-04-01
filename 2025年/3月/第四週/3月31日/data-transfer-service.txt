@@ -1,0 +1,52 @@
+data-transfer-service/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── cdf/
+│   │   │       └── training/
+│   │   │           └── svc/
+│   │   │               └── datatransfer/
+│   │   │                   ├── config/
+│   │   │                   │   ├── DatabaseConfig.java
+│   │   │                   │   └── SFTPConfig.java
+│   │   │                   ├── controller/
+│   │   │                   │   └── EmployeeDataController.java
+│   │   │                   ├── dto/
+│   │   │                   │   ├── BaseResponse.java
+│   │   │                   │   ├── CSVToDataBaseRequestDto.java
+│   │   │                   │   ├── CSVToDataBaseResponseDto.java
+│   │   │                   │   ├── EmployeeDataCSVDto.java
+│   │   │                   │   ├── ErrorResponseDto.java
+│   │   │                   │   └── Metadata.java
+│   │   │                   ├── entity/
+│   │   │                   │   └── EmployeeDataEntity.java
+│   │   │                   ├── repository/
+│   │   │                   │   └── EmployeeDataRepository.java
+│   │   │                   ├── service/
+│   │   │                   │   └── impl/
+│   │   │                   │       ├── CSVToDataBaseServiceImpl.java
+│   │   │                   │       ├── DataConverterImpl.java
+│   │   │                   │       └── SFTPServiceImpl.java
+│   │   │                   ├── util/
+│   │   │                   │   ├── CSVParserUtil.java
+│   │   │                   │   └── WebClientUtil.java
+│   │   │                   └── DatatransferApplication.java
+│   └── test/
+│       └── java/
+│           └── cdf/
+│               └── training/
+│                   └── svc/
+│                       └── datatransfer/
+│                           ├── controller/
+│                           │   └── EmployeeDataControllerTest.java
+│                           ├── repository/
+│                           │   └── EmployeeDataRepositoryTest.java
+│                           ├── service/
+│                           │   └── impl/
+│                           │       ├── CSVToDataBaseServiceImplTest.java
+│                           │       ├── DataConverterImplTest.java
+│                           │       └── SFTPServiceImplTest.java
+│                           └── util/
+│                               └── CSVParserUtilTest.java
+├── application.yml
+└── build.gradle
