@@ -1,0 +1,1473 @@
+正式：
+src/main/java/cdf/training/svc/datatransfer/
+-----分隔線-----分隔線-----分隔線-----
+config/
+DatabaseConfig.java
+----------程式內容----------
+
+package cdf.training.svc.datatransfer.config;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@MapperScan(basePackages = "cdf.training.svc.datatransfer.repository")
+public class DatabaseConfig {
+
+}
+// @MapperScan：告訴 MyBatis 掃描指定的 Mapper 接口路徑（這裡是 repository 包）。
+// 移除 JPA 配置：不再需要 @EnableJpaRepositories。
+-----分隔線-----分隔線-----分隔線-----
+config/
+SFTPConfig.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.config;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
+
+@Data
+@Configuration
+@ConfigurationProperties(prefix = "sftp")
+public class SFTPConfig {
+    private String host;
+    private int port;
+    private String username;
+    private String password;
+    private String remoteDir;
+}
+-----分隔線-----分隔線-----分隔線-----
+controller/
+EmployeeDataController.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import cdf.training.svc.datatransfer.dto.BaseResponse;
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.service.impl.CSVToDataBaseServiceImpl;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+
+@RestController
+public class EmployeeDataController {
+
+    private final CSVToDataBaseServiceImpl csvToDataBaseService;
+
+    public EmployeeDataController(CSVToDataBaseServiceImpl csvToDataBaseService) {
+        this.csvToDataBaseService = csvToDataBaseService;
+    }
+
+    @Operation(summary = "處理員工資料", description = "從 SFTP 讀取 CSV 檔案並寫入 SQL，返回處理結果")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "成功執行或業務錯誤",
+            content = @Content(examples = {
+                @ExampleObject(name = "資料處理成功", 
+                    value = "{\n  \"metadata\": { \"status\": true, \"errorCode\": null, \"errorDesc\": null },\n  \"data\": \"資料處理成功\"\n}"),
+                @ExampleObject(name = "SFTP 伺服器拒絕訪問", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"SFTP_001\", \"errorDesc\": \"SFTP 伺服器拒絕訪問，請檢查權限\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "SFTP 資料夾沒有CSV檔案", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"SFTP_002\", \"errorDesc\": \"SFTP 資料夾沒有CSV檔案，請確認SFTP\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "CSV 檔案解析失敗", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"CSV_001\", \"errorDesc\": \"CSV 檔案解析失敗，請確認檔案格式正確\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "CSV 檔案內容沒有任何資料", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"CSV_002\", \"errorDesc\": \"CSV 檔案內容沒有任何資料，請確認文件內容\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "CSV檔案，欄位缺少", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"CSV_003\", \"errorDesc\": \"CSV檔案，欄位缺少，請確認檔案\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "CSV檔案，資料缺少", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"CSV_004\", \"errorDesc\": \"CSV檔案，資料缺少，請確認檔案\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "資料庫寫入失敗", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"SQL_002\", \"errorDesc\": \"資料庫寫入失敗，請檢查資料庫連線或權限\" },\n  \"data\": null\n}")
+            })),
+        @ApiResponse(responseCode = "500", description = "系統錯誤",
+            content = @Content(examples = {
+                @ExampleObject(name = "系統發生未知錯誤", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"UNKNOWN_001\", \"errorDesc\": \"發生未知錯誤\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "無法連接到 SFTP 伺服器", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"SFTP_003\", \"errorDesc\": \"無法連接到 SFTP 伺服器，請檢查配置或網路狀態\" },\n  \"data\": null\n}"),
+                @ExampleObject(name = "無法連線到資料庫", 
+                    value = "{\n  \"metadata\": { \"status\": false, \"errorCode\": \"SQL_001\", \"errorDesc\": \"無法連線到資料庫，請檢查配置或網路狀態\" },\n  \"data\": null\n}")
+            }))
+    })
+    @PostMapping("/employee-data")
+    public ResponseEntity<BaseResponse> processEmployeeData(@RequestBody CSVToDataBaseRequestDto request) {
+        try {
+            boolean isValid = csvToDataBaseService.processCsvToDatabase(request);
+            if (isValid) {
+                return ResponseEntity.ok(new BaseResponse("資料處理成功"));
+            } else {
+                return ResponseEntity.ok(new BaseResponse(ResponseCode.UNKNOWN_ERROR.getCode(), ResponseCode.UNKNOWN_ERROR.getDefaultMessage()));
+            }
+        } catch (Exception e) {
+            String errorMessage = e.getMessage();
+            if (errorMessage != null && errorMessage.startsWith("ErrorResponseDto(code=")) {
+                try {
+                    String[] parts = errorMessage.substring("ErrorResponseDto(code=".length(), errorMessage.length() - 1).split(", ");
+                    String code = parts[0].trim();
+                    String message = parts[1].replace("message=", "").trim();
+                    return ResponseEntity.ok(new BaseResponse(code, message));
+                } catch (Exception parseEx) {
+                    return ResponseEntity.status(500).body(new BaseResponse(ResponseCode.UNKNOWN_ERROR.getCode(), "解析錯誤: " + parseEx.getMessage()));
+                }
+            } else {
+                return ResponseEntity.status(500).body(new BaseResponse(ResponseCode.UNKNOWN_ERROR.getCode(), "發生未知錯誤: " + (errorMessage != null ? errorMessage : "未知原因")));
+            }
+        }
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+dto/
+BaseResponse.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+@Data
+@Schema(description = "Response物件")
+public class BaseResponse {
+    @Schema(description = "回覆狀態物件")
+    private Metadata metadata;
+    
+    @Schema(description = "回傳資料")
+    private Object data;
+
+    // 成功的建構子
+    public BaseResponse(Object data) {
+        this.metadata = new Metadata();  // 預設 status 為 true
+        this.data = data;
+    }
+
+    // 業務錯誤的建構子
+    public BaseResponse(String errorCode, String errorDesc) {
+        this.metadata = new Metadata(errorCode, errorDesc);  // status 為 false
+        this.data = null;
+    }
+
+    // 內部 enum ResponseCode（可視需求保留或移至其他檔案）
+    public enum ResponseCode {
+        SUCCESS("SUCCESS", "資料處理成功"),
+        SFTP_PERMISSION_DENIED("SFTP_001", "SFTP 伺服器拒絕訪問，請檢查權限"),
+        SFTP_FILE_NOT_FOUND("SFTP_002", "SFTP 資料夾沒有CSV檔案，請確認SFTP"),
+        CSV_PARSE_ERROR("CSV_001", "CSV 檔案解析失敗，請確認檔案格式正確"),
+        CSV_EMPTY_ERROR("CSV_002", "CSV 檔案內容沒有任何資料，請確認文件內容"),
+        CSV_MISSING_FIELDS("CSV_003", "CSV檔案，欄位缺少，請確認檔案"),
+        CSV_MISSING_DATA("CSV_004", "CSV檔案，資料缺少，請確認檔案"),
+        SFTP_CONNECTION_ERROR("SFTP_003", "無法連接到 SFTP 伺服器，請檢查配置或網路狀態"),
+        SQL_CONNECTION_ERROR("SQL_001", "無法連線到資料庫，請檢查配置或網路狀態"),
+        SQL_WRITE_ERROR("SQL_002", "資料庫寫入失敗，請檢查資料庫連線或權限"),
+        UNKNOWN_ERROR("UNKNOWN_001", "發生未知錯誤");
+
+        private final String code;
+        private final String defaultMessage;
+
+        ResponseCode(String code, String defaultMessage) {
+            this.code = code;
+            this.defaultMessage = defaultMessage;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public String getDefaultMessage() {
+            return defaultMessage;
+        }
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+dto/
+CSVToDataBaseRequestDto.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.dto;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+@Data
+@Schema(example = "{\"COMPANY\": \"string\", \"EXCUTETIME\": \"string\"}") // 設置 Swagger 預設範例為空物件
+public class CSVToDataBaseRequestDto {
+    private String COMPANY;
+    private String EXCUTETIME;
+    
+}
+-----分隔線-----分隔線-----分隔線-----
+dto/
+CSVToDataBaseResponseDto.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class   CSVToDataBaseResponseDto {
+    private String message;
+    private String triggerTime;
+    
+    public CSVToDataBaseResponseDto(String message) {
+        this.message = message;
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+dto/
+EmployeeDataCSVDto.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.dto;
+
+import java.time.LocalDateTime;
+
+import lombok.Data;
+
+@Data
+public class EmployeeDataCSVDto {
+    private String ID;
+    private String DEPARTMENT;
+    private String JOB_TITLE;
+    private String NAME;
+    private String TEL;
+    private String EMAIL;
+    private String COMPANY;      // 新增欄位
+    private LocalDateTime EXCUTETIME; // 新增欄位
+}
+-----分隔線-----分隔線-----分隔線-----
+dto/
+ErrorResponseDto.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.dto;
+
+import lombok.Data;
+
+@Data
+public class ErrorResponseDto {
+    private String code;
+    private String message;
+    private String triggerTime;
+
+    public ErrorResponseDto(String code, String message, String triggerTime) {
+        this.code = code;
+        this.message = message;
+        this.triggerTime = triggerTime;
+    }
+
+    @Override
+    public String toString() {
+        return "ErrorResponseDto(code=" + code + ", message=" + message + ", triggerTime=" + triggerTime + ")";
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+dto/
+Metadata.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+@Data
+@Schema(description = "回覆狀態物件")
+public class Metadata {
+    @Schema(description = "回覆狀態")
+    private Boolean status;
+    
+    @Schema(description = "錯誤代碼")
+    private String errorCode;
+    
+    @Schema(description = "錯誤說明")
+    private String errorDesc;
+
+    // 成功時預設 status 為 true
+    public Metadata() {
+        this.status = true;
+        this.errorCode = null;
+        this.errorDesc = null;
+    }
+
+    // 發生錯誤時使用，status 為 false
+    public Metadata(String errorCode, String errorDesc) {
+        this.status = false;
+        this.errorCode = errorCode;
+        this.errorDesc = errorDesc;
+    }
+}
+
+-----分隔線-----分隔線-----分隔線-----
+entity/
+EmployeeDataEntity.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.entity;
+
+import java.time.LocalDateTime;
+
+import lombok.Data;
+
+@Data
+public class EmployeeDataEntity {
+    private String ID; // CSV 中的 ID，普通欄位
+    private String DEPARTMENT;
+    private String JOB_TITLE;
+    private String NAME;
+    private String TEL;
+    private String EMAIL;
+    private String COMPANY;
+    private LocalDateTime EXCUTETIME;
+}
+//不需要 @Entity 或 @Id，因為 MyBatis 不依賴 JPA 的注解，而是一個純數據物件（POJO）。
+
+-----分隔線-----分隔線-----分隔線-----
+repository/
+EmployeeDataRepository.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.repository;
+
+import org.apache.ibatis.annotations.Insert;
+import org.apache.ibatis.annotations.Mapper;
+
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+@Mapper
+public interface EmployeeDataRepository {
+    @Insert("INSERT INTO employee_data (ID, DEPARTMENT, JOB_TITLE, NAME, TEL, EMAIL, COMPANY, EXCUTETIME) " +
+            "VALUES (#{ID}, #{DEPARTMENT}, #{JOB_TITLE}, #{NAME}, #{TEL}, #{EMAIL}, #{COMPANY}, #{EXCUTETIME})")
+    void insert(EmployeeDataEntity entity);
+}
+-----分隔線-----分隔線-----分隔線-----
+service/
+impl/
+CSVToDataBaseServiceImpl.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.Random;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+import cdf.training.svc.datatransfer.repository.EmployeeDataRepository;
+import cdf.training.svc.datatransfer.util.CSVParserUtil;
+
+@Service
+public class CSVToDataBaseServiceImpl {
+    private static final Logger logger = LoggerFactory.getLogger(CSVToDataBaseServiceImpl.class);
+    private final SFTPServiceImpl sftpService;
+    private final CSVParserUtil csvParserUtil;
+    private final DataConverterImpl dataConverter;
+    private final EmployeeDataRepository repository;
+
+    public CSVToDataBaseServiceImpl(SFTPServiceImpl sftpService, CSVParserUtil csvParserUtil,
+                                    DataConverterImpl dataConverter, EmployeeDataRepository repository) {
+        this.sftpService = sftpService;
+        this.csvParserUtil = csvParserUtil;
+        this.dataConverter = dataConverter;
+        this.repository = repository;
+    }
+
+    public boolean processCsvToDatabase(CSVToDataBaseRequestDto request) {
+        try {
+            String csvContent;
+            try { //讀取sftp檔案 /upload/employee_data.csv、測試無權限讀取 /upload/test/employee_data.csv
+                csvContent = sftpService.readFileFromSFTP("/upload/employee_data.csv");
+                if (csvContent == null || csvContent.trim().isEmpty()) {
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.SFTP_FILE_NOT_FOUND.getCode(),
+                                             ResponseCode.SFTP_FILE_NOT_FOUND.getDefaultMessage(),
+                                             null).toString());
+                }
+            } catch (Exception e) {
+                String msg = e.getMessage();
+                if (msg != null && msg.startsWith("ErrorResponseDto(code=")) {
+                    throw new RuntimeException(msg);
+                }
+                throw new RuntimeException(
+                    new ErrorResponseDto(ResponseCode.SFTP_CONNECTION_ERROR.getCode(),
+                                         ResponseCode.SFTP_CONNECTION_ERROR.getDefaultMessage(),
+                                         null).toString());
+            }
+
+            logger.info("從 SFTP 讀取的 CSV 內容: {}", csvContent);
+
+            List<EmployeeDataCSVDto> csvDtos = csvParserUtil.parseCsv(csvContent);
+            if (csvDtos.isEmpty()) {
+                throw new RuntimeException(
+                    new ErrorResponseDto(ResponseCode.CSV_EMPTY_ERROR.getCode(),
+                                         ResponseCode.CSV_EMPTY_ERROR.getDefaultMessage(),
+                                         null).toString());
+            }
+
+            String COMPANY = request.getCOMPANY() != null ? request.getCOMPANY() :
+                    List.of("金控", "銀行", "證券").get(new Random().nextInt(3));
+            String EXCUTETIMEStr = request.getEXCUTETIME() != null ? request.getEXCUTETIME() :
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            LocalDateTime EXCUTETIME = LocalDateTime.parse(EXCUTETIMEStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+            List<EmployeeDataEntity> entities = dataConverter.convertToEntities(csvDtos, COMPANY, EXCUTETIME);
+
+            for (EmployeeDataEntity entity : entities) {
+                logger.info("準備寫入 SQL: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}, COMPANY={}, EXCUTETIME={}",
+                        entity.getID(), entity.getDEPARTMENT(), entity.getJOB_TITLE(), entity.getNAME(),
+                        entity.getTEL(), entity.getEMAIL(), entity.getCOMPANY(), entity.getEXCUTETIME());
+                try {
+                    repository.insert(entity);
+                } catch (Exception sqlEx) {
+                    // 記錄異常訊息以便排查
+                    logger.error("資料庫操作失敗，異常訊息: {}", sqlEx.getMessage(), sqlEx);
+
+                    // 檢查異常訊息
+                    String msg = sqlEx.getMessage() != null ? sqlEx.getMessage().toLowerCase() : "";
+                    // 檢查底層原因（如果異常被包裝）
+                    String causeMsg = sqlEx.getCause() != null && sqlEx.getCause().getMessage() != null 
+                        ? sqlEx.getCause().getMessage().toLowerCase() : "";
+
+                    // 擴展連線失敗的關鍵字檢查，針對 MSSQL
+                    if (msg.contains("connection") || 
+                        msg.contains("cannot connect") || 
+                        msg.contains("communications link failure") || 
+                        msg.contains("refused") || 
+                        msg.contains("timeout") || 
+                        msg.contains("failed to connect") || 
+                        msg.contains("tcp/ip connection") || // MSSQL 特定
+                        msg.contains("connection refused: connect") || // MSSQL 特定
+                        causeMsg.contains("connection") || 
+                        causeMsg.contains("refused") || 
+                        causeMsg.contains("tcp/ip connection")) {
+                        throw new RuntimeException(
+                            new ErrorResponseDto(ResponseCode.SQL_CONNECTION_ERROR.getCode(),
+                                                 ResponseCode.SQL_CONNECTION_ERROR.getDefaultMessage(),
+                                                 null).toString());
+                    }
+                    // 其他情況假設為寫入失敗
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.SQL_WRITE_ERROR.getCode(),
+                                             ResponseCode.SQL_WRITE_ERROR.getDefaultMessage(),
+                                             null).toString());
+                }
+            }
+
+            logger.info("成功新增 {} 筆資料到資料庫", entities.size());
+            return true;
+        } catch (Exception e) {
+            String exceptionMessage = e.getMessage();
+            if (exceptionMessage != null && exceptionMessage.startsWith("ErrorResponseDto(code=")) {
+                throw new RuntimeException(exceptionMessage);
+            }
+            logger.error("將 CSV 傳輸到資料庫時出錯: {}", e.getMessage(), e);
+            throw new RuntimeException(
+                new ErrorResponseDto(ResponseCode.UNKNOWN_ERROR.getCode(),
+                                     ResponseCode.UNKNOWN_ERROR.getDefaultMessage() + ": " +
+                                     (e.getMessage() != null ? e.getMessage() : "未知原因"),
+                                     null).toString());
+        }
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+service/
+impl/
+DataConverterImpl.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+@Component
+public class DataConverterImpl {
+    public List<EmployeeDataEntity> convertToEntities(List<EmployeeDataCSVDto> dtos, String COMPANY, LocalDateTime EXCUTETIME) {
+        return dtos.stream().map(dto -> {
+            EmployeeDataEntity entity = new EmployeeDataEntity();
+            entity.setID(dto.getID());
+            entity.setDEPARTMENT(dto.getDEPARTMENT());
+            entity.setJOB_TITLE(dto.getJOB_TITLE());
+            entity.setNAME(dto.getNAME());
+            entity.setTEL(dto.getTEL());
+            entity.setEMAIL(dto.getEMAIL());
+            entity.setCOMPANY(COMPANY);
+            entity.setEXCUTETIME(EXCUTETIME);
+            return entity;
+        }).collect(Collectors.toList());
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+service/
+impl/
+SFTPServiceImpl.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.io.InputStream;
+
+import org.springframework.stereotype.Service;
+
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+
+import cdf.training.svc.datatransfer.config.SFTPConfig;
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
+import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
+
+@Service
+public class SFTPServiceImpl {
+    private final SFTPConfig sftpConfig;
+
+    public SFTPServiceImpl(SFTPConfig sftpConfig) {
+        this.sftpConfig = sftpConfig;
+    }
+
+    public String readFileFromSFTP(String filePath) {
+        try {
+            JSch jsch = new JSch();
+            Session session = jsch.getSession(sftpConfig.getUsername(), sftpConfig.getHost(), sftpConfig.getPort());
+            session.setPassword(sftpConfig.getPassword());
+            session.setConfig("StrictHostKeyChecking", "no");
+            session.connect();
+
+            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel.connect();
+            InputStream inputStream = channel.get(filePath);
+            String content = new String(inputStream.readAllBytes());
+            channel.disconnect();
+            session.disconnect();
+            return content;
+        } catch (Exception e) {
+            String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
+            ErrorResponseDto errorDto;
+            if (msg.contains("no such file") || msg.contains("file not found") || msg.contains("not exist")) {
+                errorDto = new ErrorResponseDto(ResponseCode.SFTP_FILE_NOT_FOUND.getCode(),
+                                                ResponseCode.SFTP_FILE_NOT_FOUND.getDefaultMessage(),
+                                                null);
+            } else if (msg.contains("permission denied")) {
+                errorDto = new ErrorResponseDto(ResponseCode.SFTP_PERMISSION_DENIED.getCode(),
+                                                ResponseCode.SFTP_PERMISSION_DENIED.getDefaultMessage(),
+                                                null);
+            } else {
+                errorDto = new ErrorResponseDto(ResponseCode.SFTP_CONNECTION_ERROR.getCode(),
+                                                ResponseCode.SFTP_CONNECTION_ERROR.getDefaultMessage(),
+                                                null);
+            }
+            throw new RuntimeException(errorDto.toString(), e);
+        }
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+util/
+CSVParserUtil.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.util;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
+
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
+
+@Component
+public class CSVParserUtil {
+    private static final Logger logger = LoggerFactory.getLogger(CSVParserUtil.class);
+    
+    public List<EmployeeDataCSVDto> parseCsv(String csvContent) throws IOException {
+        if (csvContent == null || csvContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("CSV 內容為空");
+        }
+
+        // 檢查不合法分隔符（例如使用 ; 而非 ,）
+        if (csvContent.contains(";")) {
+            throw new RuntimeException(
+                new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
+                                     ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + ": 不合法分隔符 (使用 ; 而非 ,)",
+                                     null).toString());
+        }
+
+        // 移除 BOM 字元（避免影響標頭解析）
+        if (csvContent.startsWith("\uFEFF")) {
+            csvContent = csvContent.substring(1);
+        }
+
+        List<String> lines = List.of(csvContent.split("\n", -1));
+        if (lines.isEmpty() || lines.get(0).trim().isEmpty()) {
+            throw new IllegalArgumentException("CSV 內容為空");
+        }
+
+        List<EmployeeDataCSVDto> dtos = new ArrayList<>();
+        try (CSVReader csvReader = new CSVReader(new StringReader(csvContent))) {
+            // 讀取標頭
+            String[] headers = csvReader.readNext();
+            if (headers == null || headers.length == 0) {
+                throw new IllegalArgumentException("CSV 內容為空");
+            }
+
+            Map<String, Integer> headerMap = new HashMap<>();
+            for (int i = 0; i < headers.length; i++) {
+                headerMap.put(headers[i].trim().toLowerCase(), i);
+            }
+
+            // 檢查必要欄位（CSV_003：欄位數缺少）
+            String[] requiredFields = {"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"};
+            for (String field : requiredFields) {
+                if (!headerMap.containsKey(field.toLowerCase())) {
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_MISSING_FIELDS.getCode(),
+                                             ResponseCode.CSV_MISSING_FIELDS.getDefaultMessage() + " (缺少欄位: " + field + ")",
+                                             null).toString());
+                }
+            }
+
+            // 預期分隔符號數量（標頭有 6 欄，應有 5 個 ,）
+            int expectedCommaCount = headers.length - 1;
+
+            // 檢查每行的分隔符號數量
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.trim().isEmpty()) continue;
+
+                // 計算該行的逗號數量
+                int commaCount = (int) line.chars().filter(ch -> ch == ',').count();
+                if (commaCount < expectedCommaCount) {
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
+                                             ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + " (第 " + i + " 行缺少分隔符號: 預期 " + expectedCommaCount + " 個逗號，實際 " + commaCount + " 個)",
+                                             null).toString());
+                }
+            }
+
+            // 解析資料
+            String[] fields;
+            int lineNumber = 1; // 從第一行資料開始
+            while ((fields = csvReader.readNext()) != null) {
+                lineNumber++;
+                if (fields.length == 0) continue; // 跳過空行
+
+                // 檢查欄數是否與標頭一致
+                if (fields.length > headers.length) {
+                    // CSV_003：欄數與資料不一致（資料較多時）
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_MISSING_FIELDS.getCode(),
+                                             ResponseCode.CSV_MISSING_FIELDS.getDefaultMessage() + " (第 " + lineNumber + " 行資料欄數多於標頭: " + fields.length + " > " + headers.length + ")",
+                                             null).toString());
+                } else if (fields.length < headers.length) {
+                    // 由於已經檢查過分隔符號數量，這裡不應觸發，但為了安全起見，保留此檢查
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
+                                             ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + " (第 " + lineNumber + " 行欄數不一致: " + fields.length + " < " + headers.length + ")",
+                                             null).toString());
+                }
+
+                EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
+                dto.setID(getFieldValue(fields, headerMap, "ID"));
+                dto.setDEPARTMENT(getFieldValue(fields, headerMap, "DEPARTMENT"));
+                dto.setJOB_TITLE(getFieldValue(fields, headerMap, "JOB_TITLE"));
+                dto.setNAME(getFieldValue(fields, headerMap, "NAME"));
+                dto.setTEL(getFieldValue(fields, headerMap, "TEL"));
+                dto.setEMAIL(getFieldValue(fields, headerMap, "EMAIL"));
+
+                // 檢查必要資料是否缺失（CSV_004）
+                StringBuilder missingFields = new StringBuilder();
+                if (dto.getID() == null || dto.getID().trim().isEmpty()) missingFields.append("ID, ");
+                if (dto.getDEPARTMENT() == null || dto.getDEPARTMENT().trim().isEmpty()) missingFields.append("DEPARTMENT, ");
+                if (dto.getJOB_TITLE() == null || dto.getJOB_TITLE().trim().isEmpty()) missingFields.append("JOB_TITLE, ");
+                if (dto.getNAME() == null || dto.getNAME().trim().isEmpty()) missingFields.append("NAME, ");
+                if (dto.getTEL() == null || dto.getTEL().trim().isEmpty()) missingFields.append("TEL, ");
+                if (dto.getEMAIL() == null || dto.getEMAIL().trim().isEmpty()) missingFields.append("EMAIL, ");
+
+                if (missingFields.length() > 0) {
+                    String missingFieldsStr = missingFields.substring(0, missingFields.length() - 2);
+                    throw new RuntimeException(
+                        new ErrorResponseDto(ResponseCode.CSV_MISSING_DATA.getCode(),
+                                             ResponseCode.CSV_MISSING_DATA.getDefaultMessage() + " (第 " + lineNumber + " 行缺少欄位: " + missingFieldsStr + ")",
+                                             null).toString());
+                }
+
+                logger.info("Parsed CSV data: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}",
+                        dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
+                        dto.getTEL(), dto.getEMAIL());
+                        
+                dtos.add(dto);
+            }
+        } catch (CsvValidationException e) {
+            // CSV_001：未結束的引號
+            throw new RuntimeException(
+                new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
+                                     ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + ": " + e.getMessage(),
+                                     null).toString());
+        }
+
+        return dtos;
+    }
+
+    private String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
+        Integer index = headerMap.get(fieldName.toLowerCase());
+        return (index != null && index < fields.length) ? fields[index].trim() : null;
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+util/
+WebClientUtil.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.util;
+
+public class WebClientUtil {
+    
+}
+
+-----分隔線-----分隔線-----分隔線-----
+DatatransferApplication.java
+----------程式內容----------
+package cdf.training.svc.datatransfer;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DatatransferApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(DatatransferApplication.class, args);
+	}
+}
+
+-----分隔線-----分隔線-----分隔線-----
+application.yml
+----------程式內容----------
+spring:
+  application:
+    name: training-svc-data-transfer
+  datasource:
+    url: jdbc:sqlserver://localhost:1433;databaseName=CompanyDataBase;encrypt=false;collation=Chinese_Taiwan_Stroke_CI_AS
+    username: sa
+    password: 1QAZ2WSX3EDc4@
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+server:
+  port: 8080
+sftp:
+  host: localhost
+  port: 2222
+  username: sa # 預設帳號root 管理者sa
+  password: 1QAZ2WSX3EDc4@
+  remote-dir: /upload
+   # 讀取sftp檔案 /upload、測試無權限讀取 /upload/test
+logging:
+  level:
+    root: INFO
+    cdf.training.svc.datatransfer: DEBUG
+  charset:
+    console: UTF-8
+-----分隔線-----分隔線-----分隔線-----
+build.gradle
+----------程式內容----------
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.3'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'cdf.training.svc'
+version = '1.0.0-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(23)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'com.jcraft:jsch:0.1.55'
+    implementation 'com.opencsv:opencsv:5.9'
+    implementation 'org.springframework.integration:spring-integration-sftp'
+    implementation 'org.apache.commons:commons-csv:1.8'
+    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+    annotationProcessor 'org.projectlombok:lombok'
+    implementation 'com.opencsv:opencsv:5.9'
+    
+    // 測試依賴
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-core:5.12.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+}
+
+test {
+    useJUnitPlatform() // 使用 JUnit 5
+}
+
+-----分隔線-----分隔線-----分隔線-----
+測試：
+test/java/cdf/training/svc/datatransfer/
+-----分隔線-----分隔線-----分隔線-----
+測試內容：
+controller/
+EmployeeDataControllerTest.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.controller;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.service.impl.CSVToDataBaseServiceImpl;
+
+class EmployeeDataControllerTest {
+
+    private MockMvc mockMvc;
+
+    @Mock
+    private CSVToDataBaseServiceImpl csvToDataBaseService;
+
+    @InjectMocks
+    private EmployeeDataController employeeDataController;
+
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        mockMvc = MockMvcBuilders.standaloneSetup(employeeDataController).build();
+        objectMapper = new ObjectMapper();
+    }
+
+    @Test
+    void testProcessEmployeeData_Success() throws Exception {
+        // Arrange
+        CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
+        requestDto.setCOMPANY("金控");
+        requestDto.setEXCUTETIME("2025-03-20 15:30:45");
+
+        when(csvToDataBaseService.processCsvToDatabase(requestDto)).thenReturn(true);
+
+        // Act & Assert
+        mockMvc.perform(post("/employee-data") // 修正路徑
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata.status").value(true))
+                .andExpect(jsonPath("$.metadata.errorCode").doesNotExist())
+                .andExpect(jsonPath("$.metadata.errorDesc").doesNotExist())
+                .andExpect(jsonPath("$.data").value("資料處理成功"));
+
+        verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
+        System.out.println("觸發API，測試成功");
+    }
+
+    @Test
+    void testProcessEmployeeData_BusinessException() throws Exception {
+        // Arrange
+        CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
+        requestDto.setCOMPANY("金控");
+        requestDto.setEXCUTETIME("2025-03-20 15:30:45");
+
+        String errorMessage = "ErrorResponseDto(code=SFTP_001, message=SFTP 伺服器拒絕訪問，請檢查權限, triggerTime=null)";
+        when(csvToDataBaseService.processCsvToDatabase(requestDto))
+                .thenThrow(new RuntimeException(errorMessage));
+
+        // Act & Assert
+        mockMvc.perform(post("/employee-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata.status").value(false))
+                .andExpect(jsonPath("$.metadata.errorCode").value("SFTP_001"))
+                .andExpect(jsonPath("$.metadata.errorDesc").value("SFTP 伺服器拒絕訪問，請檢查權限"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
+        System.out.println("觸發API業務錯誤，測試成功");
+    }
+
+    @Test
+    void testProcessEmployeeData_SystemException() throws Exception {
+        // Arrange
+        CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
+        requestDto.setCOMPANY("金控");
+        requestDto.setEXCUTETIME("2025-03-20 15:30:45");
+
+        when(csvToDataBaseService.processCsvToDatabase(requestDto))
+                .thenThrow(new RuntimeException("未知系統錯誤"));
+
+        // Act & Assert
+        mockMvc.perform(post("/employee-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.metadata.status").value(false))
+                .andExpect(jsonPath("$.metadata.errorCode").value("UNKNOWN_001"))
+                .andExpect(jsonPath("$.metadata.errorDesc").value("發生未知錯誤: 未知系統錯誤"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
+        System.out.println("觸發API系統錯誤，測試成功");
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+repository/
+EmployeeDataRepositoryTest.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.repository;
+
+import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import org.mockito.MockitoAnnotations;
+
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+class EmployeeDataRepositoryTest {
+
+    @Mock
+    private EmployeeDataRepository repository;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInsert_Success() {
+        // Arrange
+        EmployeeDataEntity entity = new EmployeeDataEntity();
+        entity.setID("TW234121");
+        entity.setDEPARTMENT("資安");
+        entity.setJOB_TITLE("工程師");
+        entity.setNAME("陳亮");
+        entity.setTEL("02-1234-5678");
+        entity.setEMAIL("LightChen@gmail.com");
+        entity.setCOMPANY("金控");
+        entity.setEXCUTETIME(LocalDateTime.now());
+
+        // 模擬 insert 方法不拋出異常
+        doNothing().when(repository).insert(entity);
+
+        // Act & Assert
+        assertDoesNotThrow(() -> repository.insert(entity));
+        System.out.println("測試CSV資料寫入SQL資料庫，測試成功");
+    }
+
+    @Test
+    void testInsert_DatabaseException() {
+        // Arrange
+        EmployeeDataEntity entity = new EmployeeDataEntity();
+        entity.setID("TW234121");
+        entity.setDEPARTMENT("資安");
+        entity.setJOB_TITLE("工程師");
+        entity.setNAME("陳亮");
+        entity.setTEL("02-1234-5678");
+        entity.setEMAIL("LightChen@gmail.com");
+        entity.setCOMPANY("金控");
+        entity.setEXCUTETIME(LocalDateTime.now());
+
+        // 模擬 insert 方法拋出異常
+        doThrow(new RuntimeException("Database connection failed")).when(repository).insert(entity);
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> repository.insert(entity));
+        System.out.println("測試資料庫寫入失敗，測試成功");
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+service/
+impl/
+CSVToDataBaseServiceImplTest.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+import cdf.training.svc.datatransfer.repository.EmployeeDataRepository;
+import cdf.training.svc.datatransfer.util.CSVParserUtil;
+
+class CSVToDataBaseServiceImplTest {
+    @Mock
+    private SFTPServiceImpl sftpService;
+
+    @Mock
+    private CSVParserUtil csvParserUtil;
+
+    @Mock
+    private DataConverterImpl dataConverter;
+
+    @Mock
+    private EmployeeDataRepository repository;
+
+    @InjectMocks
+    private CSVToDataBaseServiceImpl service;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testProcessCsvToDatabase_Success() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com");
+        when(csvParserUtil.parseCsv(anyString())).thenReturn(List.of(new EmployeeDataCSVDto()));
+        when(dataConverter.convertToEntities(anyList(), anyString(), any())).thenReturn(List.of(new EmployeeDataEntity()));
+        doNothing().when(repository).insert(any());
+
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+        request.setCOMPANY("金控");
+        request.setEXCUTETIME("2025-03-20 15:30:45");
+
+        // Act & Assert
+        assertDoesNotThrow(() -> service.processCsvToDatabase(request));
+        System.out.println("COMPANY與時間戳記寫入SQL測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_SFTPConnectionFailure() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString()))
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=SFTP_003, message=無法連接到 SFTP 伺服器，請檢查配置或網路狀態, triggerTime=null)"));
+
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SFTP_003, message=無法連接到 SFTP 伺服器，請檢查配置或網路狀態, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("無法連接到 SFTP 伺服器，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_SFTPFileNotFound() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString()))
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)"));
+
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("資料夾沒有CSV檔案，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_CSVEmpty() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("");
+        
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("SFTP 資料夾沒有CSV檔案，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_CSVInvalidFormat() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("invalid content");
+        when(csvParserUtil.parseCsv(anyString()))
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案, triggerTime=null)"));
+    
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("檔案解析失敗，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_DatabaseConnectionFailure() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com");
+        when(csvParserUtil.parseCsv(anyString())).thenReturn(List.of(new EmployeeDataCSVDto()));
+        when(dataConverter.convertToEntities(anyList(), anyString(), any())).thenReturn(List.of(new EmployeeDataEntity()));
+        // 模擬資料庫連線失敗，拋出包含 "connection refused" 的異常訊息
+        doThrow(new RuntimeException("Connection refused: connect"))
+                .when(repository).insert(any());
+    
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+        request.setCOMPANY("金控");
+        request.setEXCUTETIME("2025-03-20 15:30:45");
+    
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SQL_001, message=無法連線到資料庫，請檢查配置或網路狀態, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("無法連線到資料庫，測試成功");
+    }
+
+    @Test
+    void testProcessCsvToDatabase_DatabaseWriteFailure() {
+        // Arrange
+        when(sftpService.readFileFromSFTP(anyString())).thenReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com");
+        when(csvParserUtil.parseCsv(anyString())).thenReturn(List.of(new EmployeeDataCSVDto()));
+        when(dataConverter.convertToEntities(anyList(), anyString(), any())).thenReturn(List.of(new EmployeeDataEntity()));
+        doThrow(new RuntimeException("ErrorResponseDto(code=SQL_002, message=資料庫寫入失敗，請檢查資料庫連線或權限, triggerTime=null)"))
+                .when(repository).insert(any());
+
+        CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+        request.setCOMPANY("金控");
+        request.setEXCUTETIME("2025-03-20 15:30:45");
+
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            service.processCsvToDatabase(request);
+        });
+        assertEquals("ErrorResponseDto(code=SQL_002, message=資料庫寫入失敗，請檢查資料庫連線或權限, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("資料庫寫入失敗，測試成功");
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+service/
+impl/
+DataConverterImplTest.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.service.impl;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.entity.EmployeeDataEntity;
+
+class DataConverterImplTest {
+    private DataConverterImpl dataConverter = new DataConverterImpl();
+
+    @Test
+    void testConvertToEntities_SingleRecord() {
+        // Arrange
+        EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
+        dto.setID("TW234121");
+        dto.setDEPARTMENT("資安");
+        dto.setJOB_TITLE("工程師");
+        dto.setNAME("陳亮");
+        dto.setTEL("02-1234-5678");
+        dto.setEMAIL("LightChen@gmail.com");
+
+        LocalDateTime now = LocalDateTime.now();
+        List<EmployeeDataEntity> entities = dataConverter.convertToEntities(List.of(dto), "金控", now);
+
+        // Act & Assert
+        assertEquals(1, entities.size());
+        EmployeeDataEntity entity = entities.get(0);
+        assertEquals("TW234121", entity.getID());
+        assertEquals("資安", entity.getDEPARTMENT());
+        assertEquals("工程師", entity.getJOB_TITLE());
+        assertEquals("陳亮", entity.getNAME());
+        assertEquals("02-1234-5678", entity.getTEL());
+        assertEquals("LightChen@gmail.com", entity.getEMAIL());
+        assertEquals("金控", entity.getCOMPANY());
+        assertEquals(now, entity.getEXCUTETIME());
+        System.out.println("單筆資料轉換，測試成功");
+    }
+
+    @Test
+    void testConvertToEntities_MultipleRecords() {
+        // Arrange
+        EmployeeDataCSVDto dto1 = new EmployeeDataCSVDto();
+        dto1.setID("TW234121");
+        dto1.setDEPARTMENT("資安");
+        dto1.setJOB_TITLE("工程師");
+        dto1.setNAME("陳亮");
+        dto1.setTEL("02-1234-5678");
+        dto1.setEMAIL("LightChen@gmail.com");
+
+        EmployeeDataCSVDto dto2 = new EmployeeDataCSVDto();
+        dto2.setID("TW234122");
+        dto2.setDEPARTMENT("財務");
+        dto2.setJOB_TITLE("分析師");
+        dto2.setNAME("李明");
+        dto2.setTEL("02-9876-5432");
+        dto2.setEMAIL("MingLi@gmail.com");
+
+        LocalDateTime now = LocalDateTime.now();
+        List<EmployeeDataEntity> entities = dataConverter.convertToEntities(List.of(dto1, dto2), "金控", now);
+
+        // Act & Assert
+        assertEquals(2, entities.size());
+        EmployeeDataEntity entity1 = entities.get(0);
+        assertEquals("TW234121", entity1.getID());
+        assertEquals("金控", entity1.getCOMPANY());
+        assertEquals(now, entity1.getEXCUTETIME());
+
+        EmployeeDataEntity entity2 = entities.get(1);
+        assertEquals("TW234122", entity2.getID());
+        assertEquals("財務", entity2.getDEPARTMENT());
+        assertEquals("金控", entity2.getCOMPANY());
+        assertEquals(now, entity2.getEXCUTETIME());
+        System.out.println("多筆資料轉換，測試成功");
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+service/
+impl/
+SFTPServiceImplTest.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.service.impl;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import static org.mockito.Mockito.when;
+import org.mockito.MockitoAnnotations;
+
+import cdf.training.svc.datatransfer.config.SFTPConfig;
+
+class SFTPServiceImplTest {
+
+    @Mock
+    private SFTPConfig sftpConfig;
+
+    @InjectMocks
+    private SFTPServiceImpl sftpService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(sftpConfig.getHost()).thenReturn("localhost");
+        when(sftpConfig.getPort()).thenReturn(2222);
+        when(sftpConfig.getUsername()).thenReturn("sa");
+        when(sftpConfig.getPassword()).thenReturn("1QAZ2WSX3EDc4@");
+    }
+
+    @Test
+    void testReadFileFromSFTP_Success() {
+        // 由於無法模擬 JSch 連線，這裡假設連線成功並返回模擬數據
+        // 實際測試可能需要使用 Testcontainers 或模擬 SFTP 伺服器
+        // 這裡僅驗證方法不拋出異常
+         //讀取sftp檔案 /upload/employee_data.csv、測試無權限讀取 /upload/test/employee_data.csv
+        assertDoesNotThrow(() -> sftpService.readFileFromSFTP("/upload/employee_data.csv"));
+        System.out.println("連接SFTP，測試成功");
+    }
+
+    @Test
+    void testReadFileFromSFTP_ConnectionFailure() {
+        // 模擬無效的主機名，導致連線失敗
+        when(sftpConfig.getHost()).thenReturn("invalid-host");
+        when(sftpConfig.getPort()).thenReturn(2222);
+        when(sftpConfig.getUsername()).thenReturn("sa");
+        when(sftpConfig.getPassword()).thenReturn("1QAZ2WSX3EDc4@");
+    
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+             //讀取sftp檔案 /upload/employee_data.csv、測試無權限讀取 /upload/test/employee_data.csv
+            sftpService.readFileFromSFTP("/upload/employee_data.csv");
+        });
+        assertEquals("ErrorResponseDto(code=SFTP_003, message=無法連接到 SFTP 伺服器，請檢查配置或網路狀態, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("無法連接到 SFTP 伺服器，測試成功");
+    }
+
+    @Test
+    void testReadFileFromSFTP_FileNotFound() {
+        // 模擬檔案不存在
+        // 由於 JSch 會拋出異常，這裡直接測試異常處理邏輯
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+             //讀取sftp檔案 /upload/non_existent_file.csv、測試無權限讀取 /upload/test/non_existent_file.csv
+            sftpService.readFileFromSFTP("/upload/non_existent_file.csv");
+        });
+        assertEquals("ErrorResponseDto(code=SFTP_002, message=SFTP 資料夾沒有CSV檔案，請確認SFTP, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("找不到SFTP檔案，測試成功");
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
+util/
+CSVParserUtilTest.java
+----------程式內容----------
+package cdf.training.svc.datatransfer.util;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
+import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
+import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
+
+@Component
+public class CSVParserUtil {
+    private static final Logger logger = LoggerFactory.getLogger(CSVParserUtil.class);
+    
+    public List<EmployeeDataCSVDto> parseCsv(String csvContent) {
+        if (csvContent == null || csvContent.trim().isEmpty()) {
+            throw new IllegalArgumentException("CSV 內容為空");
+        }
+
+        List<String> lines = Arrays.asList(csvContent.split("\n"));
+        if (lines.isEmpty() || lines.get(0).trim().isEmpty()) {
+            throw new IllegalArgumentException("CSV 內容為空");
+        }
+
+        // 解析標題
+        String[] headers = lines.get(0).split(",");
+        Map<String, Integer> headerMap = new HashMap<>();
+        for (int i = 0; i < headers.length; i++) {
+            headerMap.put(headers[i].trim().toLowerCase(), i);
+        }
+
+        // 檢查必要欄位
+        String[] requiredFields = {"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"};
+        for (String field : requiredFields) {
+            if (!headerMap.containsKey(field.toLowerCase())) {
+                throw new RuntimeException(
+                    new ErrorResponseDto(ResponseCode.CSV_MISSING_FIELDS.getCode(),
+                                         ResponseCode.CSV_MISSING_FIELDS.getDefaultMessage(),
+                                         null).toString());
+            }
+        }
+
+        // 解析資料並檢查資料是否缺失
+        List<EmployeeDataCSVDto> dtos = lines.stream()
+                .skip(1)
+                .filter(line -> !line.trim().isEmpty())
+                .map(line -> {
+                    String[] fields = line.split(",");
+                    EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
+                    dto.setID(getFieldValue(fields, headerMap, "ID"));
+                    dto.setDEPARTMENT(getFieldValue(fields, headerMap, "DEPARTMENT"));
+                    dto.setJOB_TITLE(getFieldValue(fields, headerMap, "JOB_TITLE"));
+                    dto.setNAME(getFieldValue(fields, headerMap, "NAME"));
+                    dto.setTEL(getFieldValue(fields, headerMap, "TEL"));
+                    dto.setEMAIL(getFieldValue(fields, headerMap, "EMAIL"));
+
+                    // 檢查必要資料是否缺失
+                    if (dto.getID() == null || dto.getID().trim().isEmpty() ||
+                        dto.getDEPARTMENT() == null || dto.getDEPARTMENT().trim().isEmpty() ||
+                        dto.getJOB_TITLE() == null || dto.getJOB_TITLE().trim().isEmpty() ||
+                        dto.getNAME() == null || dto.getNAME().trim().isEmpty() ||
+                        dto.getTEL() == null || dto.getTEL().trim().isEmpty() ||
+                        dto.getEMAIL() == null || dto.getEMAIL().trim().isEmpty()) {
+                        throw new RuntimeException(
+                            new ErrorResponseDto(ResponseCode.CSV_MISSING_DATA.getCode(),
+                                                 ResponseCode.CSV_MISSING_DATA.getDefaultMessage(),
+                                                 null).toString());
+                    }
+
+                    logger.info("Parsed CSV data: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}",
+                            dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
+                            dto.getTEL(), dto.getEMAIL());
+                            
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        return dtos;
+    }
+
+    private String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
+        Integer index = headerMap.get(fieldName.toLowerCase());
+        return (index != null && index < fields.length) ? fields[index].trim() : null;
+    }
+}
+-----分隔線-----分隔線-----分隔線-----
