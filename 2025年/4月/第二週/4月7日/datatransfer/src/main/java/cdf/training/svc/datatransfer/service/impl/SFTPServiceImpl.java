@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service;
 
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 
 import cdf.training.svc.datatransfer.config.SFTPConfig;
 import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
@@ -20,20 +22,42 @@ public class SFTPServiceImpl {
         this.sftpConfig = sftpConfig;
     }
 
+    // 提取 JSch 創建方法，方便模擬
+    protected JSch createJSch() throws JSchException {
+        return new JSch();
+    }
+
+    // 提取 Session 創建方法，方便模擬
+    protected Session createSession(JSch jsch) throws JSchException {
+        Session session = jsch.getSession(sftpConfig.getUsername(), sftpConfig.getHost(), sftpConfig.getPort());
+        session.setPassword(sftpConfig.getPassword());
+        session.setConfig("StrictHostKeyChecking", "no");
+        return session;
+    }
+
+    // 提取 ChannelSftp 創建方法，方便模擬
+    protected ChannelSftp createChannel(Session session) throws JSchException {
+        ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+        return channel;
+    }
+
+    // 提取檔案讀取方法，方便模擬
+    protected InputStream getFileInputStream(ChannelSftp channel, String filePath) throws SftpException {
+        return channel.get(filePath);
+    }
+
     public String readFileFromSFTP(String filePath) {
+        Session session = null;
+        ChannelSftp channel = null;
         try {
-            JSch jsch = new JSch();
-            Session session = jsch.getSession(sftpConfig.getUsername(), sftpConfig.getHost(), sftpConfig.getPort());
-            session.setPassword(sftpConfig.getPassword());
-            session.setConfig("StrictHostKeyChecking", "no");
+            JSch jsch = createJSch();
+            session = createSession(jsch);
             session.connect();
 
-            ChannelSftp channel = (ChannelSftp) session.openChannel("sftp");
+            channel = createChannel(session);
             channel.connect();
-            InputStream inputStream = channel.get(filePath);
+            InputStream inputStream = getFileInputStream(channel, filePath);
             String content = new String(inputStream.readAllBytes());
-            channel.disconnect();
-            session.disconnect();
             return content;
         } catch (Exception e) {
             String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
@@ -52,6 +76,13 @@ public class SFTPServiceImpl {
                                                 null);
             }
             throw new RuntimeException(errorDto.toString(), e);
+        } finally {
+            if (channel != null) {
+                channel.disconnect();
+            }
+            if (session != null) {
+                session.disconnect();
+            }
         }
     }
 }

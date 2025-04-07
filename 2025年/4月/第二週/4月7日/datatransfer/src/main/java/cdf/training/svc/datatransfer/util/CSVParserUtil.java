@@ -101,7 +101,8 @@ public class CSVParserUtil {
                 }
                 if (fields == null) break; // 結束條件
                 lineNumber++;
-                if (fields.length == 0) continue; // 跳過空行
+                // 檢查是否為空行或無效行（僅包含空字串）
+                if (fields.length == 0 || (fields.length == 1 && fields[0].trim().isEmpty())) continue;
 
                 // 檢查欄數是否與標頭一致
                 if (fields.length > headers.length) {
@@ -151,6 +152,11 @@ public class CSVParserUtil {
             }
         } catch (Exception e) {
             // 捕獲 try-with-resources 語法中的任何異常（包括 IOException），並轉換為 RuntimeException
+            // 如果異常訊息已經是 ErrorResponseDto 格式，則直接拋出
+            String message = e.getMessage();
+            if (message != null && message.startsWith("ErrorResponseDto(code=")) {
+                throw new RuntimeException(message, e);
+            }
             throw new RuntimeException("Failed to parse CSV: " + e.getMessage(), e);
         }
 

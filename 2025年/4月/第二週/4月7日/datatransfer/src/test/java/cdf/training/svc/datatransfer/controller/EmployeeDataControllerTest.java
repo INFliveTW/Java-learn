@@ -1,5 +1,6 @@
 package cdf.training.svc.datatransfer.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,7 +18,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto;
+import cdf.training.svc.datatransfer.dto.BaseResponse;
+import cdf.training.svc.datatransfer.dto.CSVToDataBaseRequestDto; // 引入 Metadata 類
+import cdf.training.svc.datatransfer.dto.Metadata;
 import cdf.training.svc.datatransfer.service.impl.CSVToDataBaseServiceImpl;
 
 class EmployeeDataControllerTest {
@@ -41,15 +44,14 @@ class EmployeeDataControllerTest {
 
     @Test
     void testProcessEmployeeData_Success() throws Exception {
-        //測試資料寫入成功
+        // 測試資料寫入成功
         CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
         requestDto.setCOMPANY("金控");
         requestDto.setEXCUTETIME("2025-03-20 15:30:45");
 
         when(csvToDataBaseService.processCsvToDatabase(requestDto)).thenReturn(true);
 
-        //測試資料寫入成功
-        mockMvc.perform(post("/employee-data") // 修正路徑
+        mockMvc.perform(post("/employee-data")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
                 .andExpect(status().isOk())
@@ -63,8 +65,30 @@ class EmployeeDataControllerTest {
     }
 
     @Test
+    void testProcessEmployeeData_ServiceReturnsFalse() throws Exception {
+        // 測試 service 返回 false 的情況
+        CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
+        requestDto.setCOMPANY("金控");
+        requestDto.setEXCUTETIME("2025-03-20 15:30:45");
+
+        when(csvToDataBaseService.processCsvToDatabase(requestDto)).thenReturn(false);
+
+        mockMvc.perform(post("/employee-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.metadata.status").value(false))
+                .andExpect(jsonPath("$.metadata.errorCode").value("UNKNOWN_001"))
+                .andExpect(jsonPath("$.metadata.errorDesc").value("發生未知錯誤"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
+        System.out.println("觸發API，service 返回 false，測試成功");
+    }
+
+    @Test
     void testProcessEmployeeData_BusinessException() throws Exception {
-        //測試資料寫入成功
+        // 測試業務錯誤
         CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
         requestDto.setCOMPANY("金控");
         requestDto.setEXCUTETIME("2025-03-20 15:30:45");
@@ -73,7 +97,6 @@ class EmployeeDataControllerTest {
         when(csvToDataBaseService.processCsvToDatabase(requestDto))
                 .thenThrow(new RuntimeException(errorMessage));
 
-        //測試資料寫入成功
         mockMvc.perform(post("/employee-data")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -88,8 +111,32 @@ class EmployeeDataControllerTest {
     }
 
     @Test
+    void testProcessEmployeeData_BusinessException_ParsingFailure() throws Exception {
+        // 測試業務錯誤，但 errorMessage 格式錯誤，導致解析失敗
+        CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
+        requestDto.setCOMPANY("金控");
+        requestDto.setEXCUTETIME("2025-03-20 15:30:45");
+
+        String errorMessage = "ErrorResponseDto(code=SFTP_001)"; // 格式錯誤，缺少 message 和 triggerTime
+        when(csvToDataBaseService.processCsvToDatabase(requestDto))
+                .thenThrow(new RuntimeException(errorMessage));
+
+        mockMvc.perform(post("/employee-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.metadata.status").value(false))
+                .andExpect(jsonPath("$.metadata.errorCode").value("UNKNOWN_001"))
+                .andExpect(jsonPath("$.metadata.errorDesc").value("解析錯誤: Index 1 out of bounds for length 1"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
+        System.out.println("觸發API業務錯誤，解析失敗，測試成功");
+    }
+
+    @Test
     void testProcessEmployeeData_SystemException() throws Exception {
-        //測試資料寫入成功
+        // 測試系統錯誤
         CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
         requestDto.setCOMPANY("金控");
         requestDto.setEXCUTETIME("2025-03-20 15:30:45");
@@ -97,7 +144,6 @@ class EmployeeDataControllerTest {
         when(csvToDataBaseService.processCsvToDatabase(requestDto))
                 .thenThrow(new RuntimeException("未知系統錯誤"));
 
-        //測試資料寫入成功
         mockMvc.perform(post("/employee-data")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(requestDto)))
@@ -109,5 +155,56 @@ class EmployeeDataControllerTest {
 
         verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
         System.out.println("觸發API系統錯誤，測試成功");
+    }
+
+    @Test
+    void testProcessEmployeeData_SystemException_NullMessage() throws Exception {
+        // 測試系統錯誤，且異常訊息為 null
+        CSVToDataBaseRequestDto requestDto = new CSVToDataBaseRequestDto();
+        requestDto.setCOMPANY("金控");
+        requestDto.setEXCUTETIME("2025-03-20 15:30:45");
+
+        when(csvToDataBaseService.processCsvToDatabase(requestDto))
+                .thenThrow(new RuntimeException((String) null));
+
+        mockMvc.perform(post("/employee-data")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDto)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.metadata.status").value(false))
+                .andExpect(jsonPath("$.metadata.errorCode").value("UNKNOWN_001"))
+                .andExpect(jsonPath("$.metadata.errorDesc").value("發生未知錯誤: 未知原因"))
+                .andExpect(jsonPath("$.data").doesNotExist());
+
+        verify(csvToDataBaseService, times(1)).processCsvToDatabase(requestDto);
+        System.out.println("觸發API系統錯誤，異常訊息為 null，測試成功");
+    }
+
+    @Test
+    void testBaseResponseAndMetadata() {
+        // 測試 BaseResponse 和 Metadata 的 getter 和 setter
+        BaseResponse response = new BaseResponse("test data");
+        Metadata metadata = response.getMetadata();
+
+        // 測試 Metadata 的 getter 和 setter
+        metadata.setStatus(false);
+        metadata.setErrorCode("TEST_001");
+        metadata.setErrorDesc("Test error");
+
+        assertEquals(false, metadata.getStatus());
+        assertEquals("TEST_001", metadata.getErrorCode());
+        assertEquals("Test error", metadata.getErrorDesc());
+
+        // 測試 BaseResponse 的 data getter 和 setter
+        response.setData("new data");
+        assertEquals("new data", response.getData());
+
+        // 測試 Metadata 的另一個建構子
+        Metadata errorMetadata = new Metadata("ERROR_001", "Error occurred");
+        assertEquals(false, errorMetadata.getStatus());
+        assertEquals("ERROR_001", errorMetadata.getErrorCode());
+        assertEquals("Error occurred", errorMetadata.getErrorDesc());
+
+        System.out.println("BaseResponse 和 Metadata getter 和 setter 測試成功");
     }
 }

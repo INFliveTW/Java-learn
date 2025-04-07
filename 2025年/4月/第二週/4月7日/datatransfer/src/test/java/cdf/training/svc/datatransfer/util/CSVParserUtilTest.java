@@ -1,91 +1,164 @@
 package cdf.training.svc.datatransfer.util;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import cdf.training.svc.datatransfer.dto.BaseResponse.ResponseCode;
 import cdf.training.svc.datatransfer.dto.EmployeeDataCSVDto;
-import cdf.training.svc.datatransfer.dto.ErrorResponseDto;
 
-@Component
 public class CSVParserUtilTest {
-    private static final Logger logger = LoggerFactory.getLogger(CSVParserUtilTest.class);
-    
-    public List<EmployeeDataCSVDto> parseCsv(String csvContent) {
-        if (csvContent == null || csvContent.trim().isEmpty()) {
-            throw new IllegalArgumentException("CSV 內容為空");
-        }
 
-        List<String> lines = Arrays.asList(csvContent.split("\n"));
-        if (lines.isEmpty() || lines.get(0).trim().isEmpty()) {
-            throw new IllegalArgumentException("CSV 內容為空");
-        }
+    private CSVParserUtil csvParserUtil;
 
-        // 解析標題
-        String[] headers = lines.get(0).split(",");
-        Map<String, Integer> headerMap = new HashMap<>();
-        for (int i = 0; i < headers.length; i++) {
-            headerMap.put(headers[i].trim().toLowerCase(), i);
-        }
-
-        // 檢查必要欄位
-        String[] requiredFields = {"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"};
-        for (String field : requiredFields) {
-            if (!headerMap.containsKey(field.toLowerCase())) {
-                throw new RuntimeException(
-                    new ErrorResponseDto(ResponseCode.CSV_MISSING_FIELDS.getCode(),
-                                         ResponseCode.CSV_MISSING_FIELDS.getDefaultMessage(),
-                                         null).toString());
-            }
-        }
-
-        // 解析資料並檢查資料是否缺失
-        List<EmployeeDataCSVDto> dtos = lines.stream()
-                .skip(1)
-                .filter(line -> !line.trim().isEmpty())
-                .map(line -> {
-                    String[] fields = line.split(",");
-                    EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
-                    dto.setID(getFieldValue(fields, headerMap, "ID"));
-                    dto.setDEPARTMENT(getFieldValue(fields, headerMap, "DEPARTMENT"));
-                    dto.setJOB_TITLE(getFieldValue(fields, headerMap, "JOB_TITLE"));
-                    dto.setNAME(getFieldValue(fields, headerMap, "NAME"));
-                    dto.setTEL(getFieldValue(fields, headerMap, "TEL"));
-                    dto.setEMAIL(getFieldValue(fields, headerMap, "EMAIL"));
-
-                    // 檢查必要資料是否缺失
-                    if (dto.getID() == null || dto.getID().trim().isEmpty() ||
-                        dto.getDEPARTMENT() == null || dto.getDEPARTMENT().trim().isEmpty() ||
-                        dto.getJOB_TITLE() == null || dto.getJOB_TITLE().trim().isEmpty() ||
-                        dto.getNAME() == null || dto.getNAME().trim().isEmpty() ||
-                        dto.getTEL() == null || dto.getTEL().trim().isEmpty() ||
-                        dto.getEMAIL() == null || dto.getEMAIL().trim().isEmpty()) {
-                        throw new RuntimeException(
-                            new ErrorResponseDto(ResponseCode.CSV_MISSING_DATA.getCode(),
-                                                 ResponseCode.CSV_MISSING_DATA.getDefaultMessage(),
-                                                 null).toString());
-                    }
-
-                    logger.info("Parsed CSV data: ID={}, DEPARTMENT={}, JOB_TITLE={}, NAME={}, TEL={}, EMAIL={}",
-                            dto.getID(), dto.getDEPARTMENT(), dto.getJOB_TITLE(), dto.getNAME(),
-                            dto.getTEL(), dto.getEMAIL());
-                            
-                    return dto;
-                })
-                .collect(Collectors.toList());
-
-        return dtos;
+    @BeforeEach
+    void setUp() {
+        csvParserUtil = new CSVParserUtil();
     }
 
-    private String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
-        Integer index = headerMap.get(fieldName.toLowerCase());
-        return (index != null && index < fields.length) ? fields[index].trim() : null;
+    @Test
+    void testParseCsv_NullContent() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            csvParserUtil.parseCsv(null);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("csvContent 為 null，測試成功");
+    }
+
+    @Test
+    void testParseCsv_EmptyContent() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            csvParserUtil.parseCsv("");
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("csvContent 為空字串，測試成功");
+    }
+
+    @Test
+    void testParseCsv_InvalidSeparator() {
+        String csvContent = "ID;DEPARTMENT;JOB_TITLE;NAME;TEL;EMAIL\n1;IT;Engineer;John;12345678;john@example.com";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 不合法分隔符 (使用 ; 而非 ,), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("csvContent 包含不合法分隔符，測試成功");
+    }
+
+    @Test
+    void testParseCsv_WithBOM() {
+        String csvContent = "\uFEFFID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        List<EmployeeDataCSVDto> dtos = csvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
+        EmployeeDataCSVDto dto = dtos.get(0);
+        assertEquals("1", dto.getID());
+        assertEquals("IT", dto.getDEPARTMENT());
+        assertEquals("Engineer", dto.getJOB_TITLE());
+        assertEquals("John", dto.getNAME());
+        assertEquals("12345678", dto.getTEL());
+        assertEquals("john@example.com", dto.getEMAIL());
+        System.out.println("csvContent 包含 BOM 字元，測試成功");
+    }
+
+    @Test
+    void testParseCsv_EmptyLines() {
+        String csvContent = "\n";
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("lines 為空，測試成功");
+    }
+
+    @Test
+    void testParseCsv_EmptyHeaders() {
+        String csvContent = "";
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("headers 為空，測試成功");
+    }
+
+    @Test
+    void testParseCsv_MissingFields() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL\n1,IT,Engineer,John,12345678";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案 (缺少欄位: EMAIL), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("缺少必要欄位，測試成功");
+    }
+
+    @Test
+    void testParseCsv_InsufficientCommas() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確 (第 1 行缺少分隔符號: 預期 5 個逗號，實際 3 個), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("每行逗號數量不足，測試成功");
+    }
+
+    @Test
+    void testParseCsv_TooManyFields() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com,extra";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案 (第 2 行資料欄數多於標頭: 7 > 6), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("欄數過多，測試成功");
+    }
+
+    @Test
+    void testParseCsv_TooFewFields() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確 (第 1 行缺少分隔符號: 預期 5 個逗號，實際 4 個), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("欄數過少，測試成功");
+    }
+
+    @Test
+    void testParseCsv_MissingData() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n,IT,Engineer,John,12345678,john@example.com";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_004, message=CSV檔案，資料缺少，請確認檔案 (第 2 行缺少欄位: ID), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("必要資料缺失，測試成功");
+    }
+
+    @Test
+    void testParseCsv_Success() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        List<EmployeeDataCSVDto> dtos = csvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
+        EmployeeDataCSVDto dto = dtos.get(0);
+        assertEquals("1", dto.getID());
+        assertEquals("IT", dto.getDEPARTMENT());
+        assertEquals("Engineer", dto.getJOB_TITLE());
+        assertEquals("John", dto.getNAME());
+        assertEquals("12345678", dto.getTEL());
+        assertEquals("john@example.com", dto.getEMAIL());
+        System.out.println("正常解析，測試成功");
+    }
+
+    @Test
+    void testParseCsv_Success_WithEmptyLine() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com\n\n2,HR,Manager,Jane,87654321,jane@example.com";
+        List<EmployeeDataCSVDto> dtos = csvParserUtil.parseCsv(csvContent);
+        assertEquals(2, dtos.size());
+        assertEquals("1", dtos.get(0).getID());
+        assertEquals("2", dtos.get(1).getID());
+        System.out.println("包含空行，測試成功");
     }
 }
