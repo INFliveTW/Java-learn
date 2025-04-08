@@ -166,6 +166,21 @@ public class SFTPServiceImplTest {
         System.out.println("成功讀取SFTP檔案，測試成功");
     }   
 
+
+    @Test
+void testCreateChannel_Success() throws Exception {
+    SFTPServiceImpl sftpServiceSpy = spy(sftpService);
+    doReturn(jsch).when(sftpServiceSpy).createJSch();
+    doReturn(session).when(sftpServiceSpy).createSession(jsch);
+
+    // 模擬 session.openChannel("sftp")，以覆蓋 createChannel 方法
+    doReturn(channel).when(session).openChannel("sftp");
+
+    ChannelSftp result = sftpServiceSpy.createChannel(session);
+    assertEquals(channel, result);
+    System.out.println("成功創建 Channel，測試成功");
+}
+
     @Test
     void testReadFileFromSFTP_FileNotFound_FileNotFound() throws Exception {
         SFTPServiceImpl sftpServiceSpy = spy(sftpService);
