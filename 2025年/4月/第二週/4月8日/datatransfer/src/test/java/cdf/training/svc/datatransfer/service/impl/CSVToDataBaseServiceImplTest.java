@@ -174,6 +174,43 @@ public class CSVToDataBaseServiceImplTest {
     }
 
     @Test
+    void testProcessCsvToDatabase_Success_NullCompanyAndExcutetime_MultipleRuns() {
+        // 多次執行以增加 Random 的覆蓋機率
+        for (int i = 0; i < 10; i++) {
+            doReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com")
+                    .when(sftpService).readFileFromSFTP(anyString());
+
+            EmployeeDataCSVDto dto = new EmployeeDataCSVDto();
+            dto.setID("1");
+            dto.setDEPARTMENT("IT");
+            dto.setJOB_TITLE("Engineer");
+            dto.setNAME("John");
+            dto.setTEL("12345678");
+            dto.setEMAIL("john@example.com");
+            doReturn(List.of(dto)).when(csvParserUtil).parseCsv(anyString());
+
+            EmployeeDataEntity entity = new EmployeeDataEntity();
+            entity.setID("1");
+            entity.setDEPARTMENT("IT");
+            entity.setJOB_TITLE("Engineer");
+            entity.setNAME("John");
+            entity.setTEL("12345678");
+            entity.setEMAIL("john@example.com");
+            doReturn(List.of(entity))
+                    .when(dataConverter).convertToEntities(anyList(), anyString(), any(LocalDateTime.class));
+            doNothing().when(repository).insert(any());
+
+            CSVToDataBaseRequestDto request = new CSVToDataBaseRequestDto();
+            request.setCOMPANY(null);
+            request.setEXCUTETIME(null);
+
+            boolean result = service.processCsvToDatabase(request);
+            assertTrue(result, "Should return true on success");
+        }
+        System.out.println("COMPANY 和 EXCUTETIME 為 null，多次執行以覆蓋 Random 分支，測試成功");
+    }
+
+    @Test
     void testProcessCsvToDatabase_InvalidExcutetimeFormat() {
         doReturn("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com")
                 .when(sftpService).readFileFromSFTP(anyString());
