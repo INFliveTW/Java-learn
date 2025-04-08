@@ -86,17 +86,44 @@ public class CSVParserUtilTest {
     }
 
     @Test
-    void testParseCsv_EmptyHeaders() throws Exception {
-        String csvContent = "";
+    void testParseCsv_FirstLineEmpty() throws Exception {
+        String csvContent = "\n1,IT,Engineer,John,12345678,john@example.com";
         CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
-        when(csvReader.readNext()).thenReturn(null);
+        doReturn(List.of("")).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             spyCsvParserUtil.parseCsv(csvContent);
         });
         assertEquals("CSV 內容為空", exception.getMessage());
-        System.out.println("headers 為空，測試成功");
+        System.out.println("第一行為空，測試成功");
+    }
+
+    @Test
+    void testParseCsv_EmptyHeaders() throws Exception {
+        String csvContent = "";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext()).thenReturn(null); // 模擬 headers == null
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("headers 為 null，測試成功");
+    }
+
+    @Test
+    void testParseCsv_EmptyHeadersArray() throws Exception {
+        String csvContent = "";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext()).thenReturn(new String[]{}); // 模擬 headers.length == 0
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("headers 為空陣列，測試成功");
     }
 
     @Test
@@ -169,6 +196,46 @@ public class CSVParserUtilTest {
     }
 
     @Test
+    void testParseCsv_MissingJobTitle() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,,John,12345678,john@example.com";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_004, message=CSV檔案，資料缺少，請確認檔案 (第 1 行缺少欄位: JOB_TITLE), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("缺少 JOB_TITLE 欄位，測試成功");
+    }
+
+    @Test
+    void testParseCsv_MissingTel() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,,john@example.com";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_004, message=CSV檔案，資料缺少，請確認檔案 (第 1 行缺少欄位: TEL), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("缺少 TEL 欄位，測試成功");
+    }
+
+    @Test
+    void testParseCsv_NullFields() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "", "john@example.com"})
+                .thenReturn(null);
+    
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_004, message=CSV檔案，資料缺少，請確認檔案 (第 1 行缺少欄位: TEL), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("欄位值為空字串，測試成功");
+    }
+
+    @Test
     void testParseCsv_ReadDataFailure() throws Exception {
         String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
         CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
@@ -200,13 +267,37 @@ public class CSVParserUtilTest {
     }
 
     @Test
-    void testParseCsv_Success_WithEmptyLine() {
-        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com\n\n2,HR,Manager,Jane,87654321,jane@example.com";
-        List<EmployeeDataCSVDto> dtos = csvParserUtil.parseCsv(csvContent);
-        assertEquals(2, dtos.size());
+    void testParseCsv_Success_WithEmptyLine() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenReturn(new String[]{}) // 模擬 fields.length == 0
+                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
+                .thenReturn(null);
+
+        List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
         assertEquals("1", dtos.get(0).getID());
-        assertEquals("2", dtos.get(1).getID());
-        System.out.println("包含空行，測試成功");
+        System.out.println("包含空行（fields.length == 0），測試成功");
+    }
+
+    @Test
+    void testParseCsv_Success_WithEmptyDataLine() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenReturn(new String[]{""}) // 模擬 fields.length == 1 && fields[0].trim().isEmpty()
+                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
+                .thenReturn(null);
+
+        List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
+        assertEquals("1", dtos.get(0).getID());
+        System.out.println("包含空數據行（fields.length == 1 && fields[0].trim().isEmpty()），測試成功");
     }
 
     @Test
@@ -222,6 +313,44 @@ public class CSVParserUtilTest {
         assertEquals("12345678", dto.getTEL());
         assertEquals("john@example.com", dto.getEMAIL());
         System.out.println("包含空格，測試成功");
+    }
+
+    @Test
+    void testParseCsv_ErrorResponseDtoException() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=CSV_001, message=Test error, triggerTime=null)"));
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("Failed to parse CSV: Failed to read CSV data at line 1: ErrorResponseDto(code=CSV_001, message=Test error, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("異常訊息以 ErrorResponseDto 開頭，測試成功");
+    }
+
+    @Test
+    void testParseCsv_NullMessageException() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenThrow(new RuntimeException() {
+                    @Override
+                    public String getMessage() {
+                        return null; // 模擬 message == null
+                    }
+                });
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("Failed to parse CSV: Failed to read CSV data at line 1: null", exception.getMessage());
+        System.out.println("異常訊息為 null，測試成功");
     }
 
     @Test
@@ -241,71 +370,6 @@ public class CSVParserUtilTest {
     }
 
     @Test
-    void testGetFieldValue_IndexOutOfBounds() throws Exception {
-        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer";
-        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
-        List<String> lines = List.of("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL", "1,IT,Engineer,,,");
-        doReturn(lines).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
-        when(csvReader.readNext())
-                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
-                .thenReturn(new String[]{"1", "IT", "Engineer"})
-                .thenReturn(null);
-
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            spyCsvParserUtil.parseCsv(csvContent);
-        });
-        assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確 (第 1 行欄數不一致: 3 < 6), triggerTime=null)", 
-                     exception.getMessage());
-        System.out.println("getFieldValue 中 index 超出範圍，測試成功");
-    }
-
-    // 新增測試案例：模擬 lines 為空
-    @Test
-    void testParseCsv_LinesEmpty() throws Exception {
-        String csvContent = "";
-        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-        doReturn(List.of()).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
-
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            spyCsvParserUtil.parseCsv(csvContent);
-        });
-        assertEquals("CSV 內容為空", exception.getMessage());
-        System.out.println("lines 為空列表，測試成功");
-    }
-
-    // 新增測試案例：模擬數據行為空
-    @Test
-    void testParseCsv_EmptyDataLine() throws Exception {
-        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n\n1,IT,Engineer,John,12345678,john@example.com";
-        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
-        when(csvReader.readNext())
-                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
-                .thenReturn(new String[]{""}) // 模擬空數據行
-                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
-                .thenReturn(null);
-
-        List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
-        assertEquals(1, dtos.size());
-        assertEquals("1", dtos.get(0).getID());
-        System.out.println("數據行包含空行，測試成功");
-    }
-
-    // 新增測試案例：模擬缺失多個欄位
-    @Test
-    void testParseCsv_MissingMultipleFields() throws Exception {
-        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n,,Engineer,,12345678,";
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            csvParserUtil.parseCsv(csvContent);
-        });
-        assertEquals("ErrorResponseDto(code=CSV_004, message=CSV檔案，資料缺少，請確認檔案 (第 1 行缺少欄位: ID, DEPARTMENT, NAME, EMAIL), triggerTime=null)", 
-                     exception.getMessage());
-        System.out.println("缺失多個欄位，測試成功");
-    }
-
-    // 新增測試案例：模擬 getFieldValue 返回 null
-    @Test
     void testGetFieldValue_NullField() throws Exception {
         String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer";
         CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
@@ -322,6 +386,50 @@ public class CSVParserUtilTest {
         });
         assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確 (第 1 行欄數不一致: 3 < 6), triggerTime=null)", 
                      exception.getMessage());
-        System.out.println("getFieldValue 返回 null，測試成功");
+        System.out.println("getFieldValue 返回 null（index < fields.length 為 false），測試成功");
+    }
+
+    @Test
+    void testGetFieldValue_NullIndex() throws Exception {
+        String csvContent = "WRONG_HEADER\n1";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        List<String> lines = List.of("WRONG_HEADER", "1");
+        doReturn(lines).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"WRONG_HEADER"})
+                .thenReturn(new String[]{"1"})
+                .thenReturn(null);
+
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_003, message=CSV檔案，欄位缺少，請確認檔案 (缺少欄位: ID), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("getFieldValue 返回 null（index == null），測試成功");
+    }
+
+    @Test
+    void testParseCsv_LinesEmpty() throws Exception {
+        String csvContent = "";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(List.of()).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("lines 為空列表，測試成功");
+    }
+
+    @Test
+    void testParseCsv_MissingMultipleFields() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n,,Engineer,,12345678,";
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            csvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("ErrorResponseDto(code=CSV_004, message=CSV檔案，資料缺少，請確認檔案 (第 1 行缺少欄位: ID, DEPARTMENT, NAME, EMAIL), triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("缺失多個欄位，測試成功");
     }
 }
