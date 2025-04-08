@@ -51,28 +51,7 @@ public class SFTPServiceImplTest {
         when(sftpConfig.getPassword()).thenReturn("1QAZ2WSX3EDc4@");
     }
 
-    @Test
-    void testReadFileFromSFTP_Success() throws Exception {
-        SFTPServiceImpl sftpServiceSpy = spy(sftpService);
-        doReturn(jsch).when(sftpServiceSpy).createJSch();
-        doReturn(session).when(sftpServiceSpy).createSession(jsch);
-        doReturn(channel).when(sftpServiceSpy).createChannel(session);
 
-        doNothing().when(session).connect();
-        doNothing().when(channel).connect();
-
-        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
-        InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes());
-        doReturn(inputStream).when(sftpServiceSpy).getFileInputStream(channel, "/upload/employee_data.csv");
-
-        // 模擬 disconnect
-        doNothing().when(channel).disconnect();
-        doNothing().when(session).disconnect();
-
-        String result = sftpServiceSpy.readFileFromSFTP("/upload/employee_data.csv");
-        assertEquals(csvContent, result);
-        System.out.println("成功讀取SFTP檔案，測試成功");
-    }
 
     @Test
     void testReadFileFromSFTP_ConnectionFailure_SessionConnect() throws Exception {
@@ -158,6 +137,34 @@ public class SFTPServiceImplTest {
                      exception.getMessage());
         System.out.println("找不到SFTP檔案（no such file），測試成功");
     }
+
+    @Test
+    void testReadFileFromSFTP_Success() throws Exception {
+        // 使用 spy 來控制 sftpService 的行為
+        SFTPServiceImpl sftpServiceSpy = spy(sftpService);
+        doReturn(jsch).when(sftpServiceSpy).createJSch();
+        doReturn(session).when(sftpServiceSpy).createSession(jsch);
+        doReturn(channel).when(sftpServiceSpy).createChannel(session);
+    
+        // 模擬 Session 的行為
+        doNothing().when(session).connect();
+    
+        // 模擬 Session.openChannel
+        doNothing().when(channel).connect();
+    
+        // 模擬 ChannelSftp.get
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        InputStream inputStream = new ByteArrayInputStream(csvContent.getBytes());
+        doReturn(inputStream).when(channel).get("/upload/employee_data.csv");
+    
+        // 模擬 disconnect
+        doNothing().when(channel).disconnect();
+        doNothing().when(session).disconnect();
+    
+        String result = sftpServiceSpy.readFileFromSFTP("/upload/employee_data.csv");
+        assertEquals(csvContent, result);
+        System.out.println("成功讀取SFTP檔案，測試成功");
+    }   
 
     @Test
     void testReadFileFromSFTP_FileNotFound_FileNotFound() throws Exception {
