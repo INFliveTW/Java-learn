@@ -580,11 +580,12 @@ public class CSVParserUtilTest {
     void testGetFieldValue_NullIndex() throws Exception {
         String[] fields = new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"};
         Map<String, Integer> headerMap = new HashMap<>();
-        headerMap.put("ID", 0);
-        headerMap.put("DEPARTMENT", 1);
-        headerMap.put("JOB_TITLE", 2);
-        headerMap.put("TEL", 4);
-        headerMap.put("EMAIL", 5);
+        // 使用小寫鍵，與 getFieldValue 方法的查找方式一致
+        headerMap.put("id", 0);
+        headerMap.put("department", 1);
+        headerMap.put("job_title", 2);
+        headerMap.put("tel", 4);
+        headerMap.put("email", 5);
 
         Method getFieldValueMethod = CSVParserUtil.class.getDeclaredMethod(
             "getFieldValue", String[].class, Map.class, String.class);
@@ -599,12 +600,13 @@ public class CSVParserUtilTest {
     void testGetFieldValue_IndexOutOfBounds() throws Exception {
         String[] fields = new String[]{"1", "IT", "Engineer"};
         Map<String, Integer> headerMap = new HashMap<>();
-        headerMap.put("ID", 0);
-        headerMap.put("DEPARTMENT", 1);
-        headerMap.put("JOB_TITLE", 2);
-        headerMap.put("NAME", 3);
-        headerMap.put("TEL", 4);
-        headerMap.put("EMAIL", 5);
+        // 使用小寫鍵，與 getFieldValue 方法的查找方式一致
+        headerMap.put("id", 0);
+        headerMap.put("department", 1);
+        headerMap.put("job_title", 2);
+        headerMap.put("name", 3);
+        headerMap.put("tel", 4);
+        headerMap.put("email", 5);
 
         Method getFieldValueMethod = CSVParserUtil.class.getDeclaredMethod(
             "getFieldValue", String[].class, Map.class, String.class);
@@ -623,6 +625,7 @@ public class CSVParserUtilTest {
     void testGetFieldValue_ValidIndex_Explicit() throws Exception {
         String[] fields = new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"};
         Map<String, Integer> headerMap = new HashMap<>();
+        // 使用小寫鍵，與 getFieldValue 方法的查找方式一致
         headerMap.put("id", 0);
         headerMap.put("department", 1);
         headerMap.put("job_title", 2);
@@ -641,64 +644,107 @@ public class CSVParserUtilTest {
         System.out.println("getFieldValue 返回有效值（index != null && index < fields.length），測試成功");
     }
 
-//新增
+    // 新增的顯式測試用例，針對未覆蓋的程式碼片段
 
-@Test
-void testParseCsv_LinesNotEmpty_FirstLineNotEmpty_Explicit() throws Exception {
-    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
-    CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-    doReturn(List.of("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL", "1,IT,Engineer,John,12345678,john@example.com"))
-            .when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
-    doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
-    when(csvReader.readNext())
-            .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
-            .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
-            .thenReturn(null);
+    @Test
+    void testParseCsv_LinesNotEmpty_FirstLineNotEmpty_Explicit() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(List.of("ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL", "1,IT,Engineer,John,12345678,john@example.com"))
+                .when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
+                .thenReturn(null);
 
-    List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
-    assertEquals(1, dtos.size());
-    assertEquals("1", dtos.get(0).getID());
-    System.out.println("lines 不為空且第一行不為空，顯式測試成功");
-}
+        List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
+        assertEquals("1", dtos.get(0).getID());
+        System.out.println("顯式測試：lines 不為空且第一行不為空，測試成功");
+    }
 
-@Test
-void testParseCsv_HeadersNotNull_NotEmpty_Explicit() throws Exception {
-    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
-    CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-    doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
-    when(csvReader.readNext())
-            .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
-            .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
-            .thenReturn(null);
+    @Test
+    void testParseCsv_HeadersNotNull_NotEmpty_Explicit() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
+                .thenReturn(null);
 
-    List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
-    assertEquals(1, dtos.size());
-    assertEquals("1", dtos.get(0).getID());
-    System.out.println("headers 不為 null 且不為空，顯式測試成功");
-}
+        List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
+        assertEquals("1", dtos.get(0).getID());
+        System.out.println("顯式測試：headers 不為 null 且不為空，測試成功");
+    }
 
-@Test
-void testParseCsv_NonEmptyNonNullFieldValues_Explicit() throws Exception {
-    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
-    CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
-    doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
-    when(csvReader.readNext())
-            .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
-            .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
-            .thenReturn(null);
+    @Test
+    void testParseCsv_NonEmptyNonNullFieldValues_Explicit() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenReturn(new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"})
+                .thenReturn(null);
 
-    doReturn("1").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("ID"));
-    doReturn("IT").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("DEPARTMENT"));
-    doReturn("Engineer").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("JOB_TITLE"));
-    doReturn("John").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("NAME"));
-    doReturn("12345678").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("TEL"));
-    doReturn("john@example.com").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("EMAIL"));
+        // 顯式模擬所有欄位不為 null 且不為空
+        doReturn("1").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("ID"));
+        doReturn("IT").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("DEPARTMENT"));
+        doReturn("Engineer").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("JOB_TITLE"));
+        doReturn("John").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("NAME"));
+        doReturn("12345678").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("TEL"));
+        doReturn("john@example.com").when(spyCsvParserUtil).getFieldValue(any(String[].class), any(Map.class), eq("EMAIL"));
 
-    List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
-    assertEquals(1, dtos.size());
-    assertEquals("1", dtos.get(0).getID());
-    System.out.println("所有欄位值不為 null 且不為空，顯式測試成功");
-}
+        List<EmployeeDataCSVDto> dtos = spyCsvParserUtil.parseCsv(csvContent);
+        assertEquals(1, dtos.size());
+        assertEquals("1", dtos.get(0).getID());
+        assertEquals("IT", dtos.get(0).getDEPARTMENT());
+        assertEquals("Engineer", dtos.get(0).getJOB_TITLE());
+        assertEquals("John", dtos.get(0).getNAME());
+        assertEquals("12345678", dtos.get(0).getTEL());
+        assertEquals("john@example.com", dtos.get(0).getEMAIL());
+        System.out.println("顯式測試：所有欄位值不為 null 且不為空，測試成功");
+    }
 
+    @Test
+    void testParseCsv_NonErrorResponseMessage_Explicit() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenThrow(new RuntimeException("Generic error message"));
 
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("Failed to parse CSV: Failed to read CSV data at line 1: Generic error message", exception.getMessage());
+        System.out.println("顯式測試：異常訊息不以 ErrorResponseDto 開頭，測試成功");
+    }
+
+    @Test
+    void testGetFieldValue_ValidIndex_Explicit_Additional() throws Exception {
+        String[] fields = new String[]{"1", "IT", "Engineer", "John", "12345678", "john@example.com"};
+        Map<String, Integer> headerMap = new HashMap<>();
+        // 使用小寫鍵，與 getFieldValue 方法的查找方式一致
+        headerMap.put("id", 0);
+        headerMap.put("department", 1);
+        headerMap.put("job_title", 2);
+        headerMap.put("name", 3);
+        headerMap.put("tel", 4);
+        headerMap.put("email", 5);
+
+        Method getFieldValueMethod = CSVParserUtil.class.getDeclaredMethod(
+                "getFieldValue", String[].class, Map.class, String.class);
+        getFieldValueMethod.setAccessible(true);
+        String idValue = (String) getFieldValueMethod.invoke(csvParserUtil, fields, headerMap, "ID");
+        String departmentValue = (String) getFieldValueMethod.invoke(csvParserUtil, fields, headerMap, "DEPARTMENT");
+
+        assertEquals("1", idValue);
+        assertEquals("IT", departmentValue);
+        System.out.println("顯式測試：getFieldValue 返回有效值（index != null && index < fields.length），測試成功");
+    }
 }
