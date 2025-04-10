@@ -171,6 +171,10 @@ public class CSVParserUtil {
 
     String getFieldValue(String[] fields, Map<String, Integer> headerMap, String fieldName) {
         Integer index = headerMap.get(fieldName.toLowerCase());
-        return (index != null && index < fields.length) ? fields[index].trim() : null;
+        if (index == null || index >= fields.length) {
+            return null;
+        }
+        String value = fields[index].trim();
+        return value.isEmpty() ? null : value;
     }
 }
