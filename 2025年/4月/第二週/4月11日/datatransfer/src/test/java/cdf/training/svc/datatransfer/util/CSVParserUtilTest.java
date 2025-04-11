@@ -821,4 +821,19 @@ public class CSVParserUtilTest {
     
         System.out.println("splitCsvContentIntoLines 方法測試成功");
     }
+
+    @Test
+    void testParseCsv_LinesEmpty() throws Exception {
+        String csvContent = "";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(List.of()).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
+    
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage());
+        System.out.println("lines.isEmpty() 為空值，測試成功");
+    }
+
+
 }

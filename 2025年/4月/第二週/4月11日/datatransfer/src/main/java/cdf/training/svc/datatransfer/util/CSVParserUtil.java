@@ -25,6 +25,9 @@ public class CSVParserUtil {
     }
 
     protected List<String> splitCsvContentIntoLines(String csvContent) {
+        if (csvContent == null || csvContent.trim().isEmpty()) {
+            return List.of();
+        }
         return List.of(csvContent.split("\n", -1));
     }
 
