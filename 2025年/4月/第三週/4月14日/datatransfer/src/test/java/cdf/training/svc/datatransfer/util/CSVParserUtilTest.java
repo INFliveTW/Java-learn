@@ -91,10 +91,10 @@ public class CSVParserUtilTest {
     
         // 測試 headers == null
         when(csvReader.readNext()).thenReturn(null);
-        Exception exception1 = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception1 = assertThrows(RuntimeException.class, () -> {
             spyCsvParserUtil.parseCsv(csvContent);
         });
-        assertEquals("CSV 內容為空", exception1.getMessage());
+        assertEquals("Failed to parse CSV: CSV 內容為空", exception1.getMessage());
     
         System.out.println("headers 為 null，測試成功");
     }
@@ -154,7 +154,7 @@ public class CSVParserUtilTest {
         Exception exception = assertThrows(RuntimeException.class, () -> {
             spyCsvParserUtil.parseCsv(csvContent);
         });
-        assertEquals("Failed to read CSV headers: Failed to read headers", exception.getMessage());
+        assertEquals("Failed to parse CSV: Failed to read CSV headers: Failed to read headers", exception.getMessage());
         System.out.println("讀取標頭失敗，測試成功");
     }
 
@@ -797,10 +797,10 @@ public class CSVParserUtilTest {
         doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
     
         when(csvReader.readNext()).thenReturn(null);
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(RuntimeException.class, () -> {
             spyCsvParserUtil.parseCsv(csvContent);
         });
-        assertEquals("CSV 內容為空", exception.getMessage());
+        assertEquals("Failed to parse CSV: CSV 內容為空", exception.getMessage());
         System.out.println("headers 為 null，測試成功");
     }
     
@@ -811,10 +811,10 @@ public class CSVParserUtilTest {
         doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
     
         when(csvReader.readNext()).thenReturn(new String[]{});
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+        Exception exception = assertThrows(RuntimeException.class, () -> {
             spyCsvParserUtil.parseCsv(csvContent);
         });
-        assertEquals("CSV 內容為空", exception.getMessage());
+        assertEquals("Failed to parse CSV: CSV 內容為空", exception.getMessage());
         System.out.println("headers.length 為 0，測試成功");
     }
 
@@ -873,5 +873,43 @@ public class CSVParserUtilTest {
         assertEquals(0, lines5.size());
     
         System.out.println("splitCsvContentIntoLines 方法測試成功");
+    }
+
+    @Test
+    void testSplitCsvContentIntoLines_NullContent() {
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        List<String> result = spyCsvParserUtil.splitCsvContentIntoLines(null);
+        assertEquals(0, result.size(), "當 csvContent 為 null 時，應返回空列表");
+        System.out.println("splitCsvContentIntoLines 為 null，測試成功");
+    }
+
+    /**
+     * 測試 splitCsvContentIntoLines 方法當 csvContent 為空字串時返回空列表
+     */
+    @Test
+    void testSplitCsvContentIntoLines_EmptyContent() {
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        List<String> result = spyCsvParserUtil.splitCsvContentIntoLines("");
+        assertEquals(0, result.size(), "當 csvContent 為空字串時，應返回空列表");
+        System.out.println("splitCsvContentIntoLines 為空字串，測試成功");
+    }
+
+    /**
+     * 測試 parseCsv 方法當 splitCsvContentIntoLines 返回空列表時拋出異常
+     */
+    @Test
+    void testParseCsv_LinesEmpty() {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        
+        // 模擬 splitCsvContentIntoLines 返回空列表
+        doReturn(List.of()).when(spyCsvParserUtil).splitCsvContentIntoLines(anyString());
+    
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+        assertEquals("CSV 內容為空", exception.getMessage(), 
+            "當 lines 為空時，應拋出 IllegalArgumentException 並包含正確訊息");
+        System.out.println("parseCsv lines 為空，測試成功");
     }
 }
