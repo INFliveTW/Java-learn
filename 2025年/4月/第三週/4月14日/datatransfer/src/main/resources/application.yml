@@ -14,7 +14,7 @@ sftp:
   username: sa # 預設帳號root 管理者sa
   password: 1QAZ2WSX3EDc4@
   remote-dir: /upload
-   # 讀取sftp檔案 /upload、測試無權限讀取 /upload/test
+   # 讀取sftp檔案 /upload、測試無權限讀取 /upload
 logging:
   level:
     root: INFO
