@@ -171,24 +171,27 @@ public class CSVParserUtil {
 
                     dtos.add(dto);
                 }
-            } catch (Exception e) {
-                String message = e.getMessage();
-                logger.info("Inner catch: message == null: {}", message == null);
-                if (message != null && message.startsWith("ErrorResponseDto(code=")) {
-                    throw new RuntimeException(message, e);
-                }
-                throw new RuntimeException(
-                    new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
-                                         ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + ": " + (message != null ? message : "未知原因"),
-                                         null).toString());
-            }
+} catch (Exception e) {
+    String message = e.getMessage();
+    logger.info("Inner catch: message == null: {}", message == null);
+    if (message != null && message.startsWith("ErrorResponseDto(code=")) {
+        throw new RuntimeException(message);  // ✅ 直接丟原始訊息
+    }
+    throw new RuntimeException(
+        new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
+                             ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + ": " + (message != null ? message : "未知原因"),
+                             null).toString());
+}
+
             return dtos;
         } catch (Exception e) {
             String message = e.getMessage();
-            logger.info("Outer catch: message == null: {}", message == null);
+            //logger.info("Outer catch: message == null: {}", message == null);
             if (message != null && message.startsWith("ErrorResponseDto(code=")) {
+                System.out.println("🔥 外層 catch 命中 rethrow 原始 ErrorResponseDto");
                 throw new RuntimeException(message, e);
             }
+            System.out.println("💀 外層 catch 進入 fallback");
             throw new RuntimeException(
                 new ErrorResponseDto(ResponseCode.CSV_PARSE_ERROR.getCode(),
                                      ResponseCode.CSV_PARSE_ERROR.getDefaultMessage() + ": " + (message != null ? message : "未知原因"),

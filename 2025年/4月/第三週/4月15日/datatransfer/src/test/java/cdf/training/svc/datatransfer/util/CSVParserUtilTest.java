@@ -1,5 +1,6 @@
 package cdf.training.svc.datatransfer.util;
 
+import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -949,5 +950,159 @@ public class CSVParserUtilTest {
         System.out.println("parseCsv lines 為空，測試成功");
     }
     
+    @Test
+    void testParseCsv_WrappedExceptionWhenMessageNotStartsWithErrorResponseDto() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
     
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenThrow(new RuntimeException("非標準錯誤格式"));
+    
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+    
+        assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 無法讀取第 1 行: 非標準錯誤格式, triggerTime=null)", 
+                     exception.getMessage());
+        System.out.println("已捕捉非 ErrorResponseDto 錯誤訊息並進行包裝，測試成功");
+    }
+
+    @Test
+    void testParseCsv_WrappedExceptionWhenMessageIsNull() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+    
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenThrow(new RuntimeException() {
+                    @Override
+                    public String getMessage() {
+                        return null; // 模擬 null message
+                    }
+                });
+    
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+    
+        assertEquals(
+            "ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 無法讀取第 1 行: null, triggerTime=null)",
+            exception.getMessage()
+        );
+        System.out.println("異常訊息為 null 時，補上 '未知原因'，測試成功");
+    }
+
+    @Test
+    void testParseCsv_ErrorResponseMessageDirectThrow() throws Exception {
+        String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL\n1,IT,Engineer,John,12345678,john@example.com";
+        CSVParserUtil spyCsvParserUtil = spy(csvParserUtil);
+        doReturn(csvReader).when(spyCsvParserUtil).createCSVReader(anyString());
+    
+        when(csvReader.readNext())
+                .thenReturn(new String[]{"ID", "DEPARTMENT", "JOB_TITLE", "NAME", "TEL", "EMAIL"})
+                .thenThrow(new RuntimeException("ErrorResponseDto(code=CSV_999, message=錯誤訊息, triggerTime=null)"));
+    
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            spyCsvParserUtil.parseCsv(csvContent);
+        });
+    
+        assertEquals(
+            "ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 無法讀取第 1 行: ErrorResponseDto(code=CSV_999, message=錯誤訊息, triggerTime=null), triggerTime=null)",
+            exception.getMessage()
+        );
+        System.out.println("已直接捕捉 ErrorResponseDto 格式錯誤訊息，測試成功");
+    }
+    @Test
+    void testOuterCatch_GenericErrorMessage_WrappedAsDto() {
+        String csvContent = "INVALID_CSV_WITH;SEMICOLONS";
+    
+        // 這會觸發 parseCsv 的 ; 分隔符錯誤 → 丟出 RuntimeException（非 ErrorResponseDto）
+        Exception ex = assertThrows(RuntimeException.class, () -> csvParserUtil.parseCsv(csvContent));
+    
+        assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 不合法分隔符 (使用 ; 而非 ,), triggerTime=null)",
+                     ex.getMessage());
+        System.out.println("✅ 外層 catch 包裝非 ErrorResponseDto 訊息成功");
+    }
+
+@Test
+void testOuterCatch_MessageStartsWithErrorResponseDto() {
+    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL";
+
+    // 模擬 header 為 null，觸發 ErrorResponseDto 字串訊息
+    CSVParserUtil spyUtil = spy(csvParserUtil);
+    doReturn(new CSVReader(new StringReader(csvContent)) {
+        @Override
+        public String[] readNext() {
+            return null; // headers == null → 觸發 CSV_EMPTY_ERROR
+        }
+    }).when(spyUtil).createCSVReader(anyString());
+
+    Exception ex = assertThrows(RuntimeException.class, () -> spyUtil.parseCsv(csvContent));
+
+    // 應為原始的 ErrorResponseDto 字串，沒有被包裝
+    assertEquals("ErrorResponseDto(code=CSV_002, message=CSV 檔案內容沒有任何資料，請確認文件內容, triggerTime=null)",
+                 ex.getMessage());
+    System.out.println("✅ 外層 catch passthrough ErrorResponseDto 訊息成功");
+}
+
+@Test
+void testOuterCatch_MessageIsNull_FallbackToUnknown() {
+    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL";
+
+    CSVParserUtil spyUtil = spy(csvParserUtil);
+
+    // 讓 createCSVReader 本身拋出異常，才會落到 outer catch，而不是 inner try-catch
+    doThrow(new RuntimeException() {
+        @Override
+        public String getMessage() {
+            return null; // 模擬 null message
+        }
+    }).when(spyUtil).createCSVReader(anyString());
+
+    Exception ex = assertThrows(RuntimeException.class, () -> spyUtil.parseCsv(csvContent));
+
+    assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 未知原因, triggerTime=null)",
+                 ex.getMessage());
+    System.out.println("✅ 外層 catch 處理 null message fallback 成功");
+}
+
+@Test
+void testOuterCatchWithNullMessageOnly() {
+    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL";
+
+    CSVParserUtil spyUtil = spy(csvParserUtil);
+
+    // 模擬 createCSVReader 直接拋出 Exception，跳過 inner try 塊
+    doThrow(new RuntimeException() {
+        @Override
+        public String getMessage() {
+            return null; // 確保是 null message
+        }
+    }).when(spyUtil).createCSVReader(anyString());
+
+    Exception exception = assertThrows(RuntimeException.class, () -> spyUtil.parseCsv(csvContent));
+
+    assertEquals("ErrorResponseDto(code=CSV_001, message=CSV 檔案解析失敗，請確認檔案格式正確: 未知原因, triggerTime=null)", exception.getMessage());
+    System.out.println("✅ 外層 catch message 為 null，fallback to '未知原因' 成功");
+}
+
+@Test
+void testOuterCatch_ErrorResponseDtoMessage_RethrowDirectly() {
+    String csvContent = "ID,DEPARTMENT,JOB_TITLE,NAME,TEL,EMAIL";
+
+    CSVParserUtil spyUtil = spy(csvParserUtil);
+
+    doThrow(new RuntimeException("ErrorResponseDto(code=CSV_999, message=外層捕捉用, triggerTime=null)"))
+        .when(spyUtil).createCSVReader(anyString());
+
+    Exception ex = assertThrows(RuntimeException.class, () -> spyUtil.parseCsv(csvContent));
+
+    assertEquals("ErrorResponseDto(code=CSV_999, message=外層捕捉用, triggerTime=null)", ex.getMessage());
+    System.out.println("✅ 外層 catch 拋出原始 ErrorResponseDto 格式訊息，測試成功");
+}
+
+
 }
