@@ -1,0 +1,63 @@
+建立 feature 分支來進行開發
+在完成後透過 Pull Request（PR）將變更合併回 main
+
+[一]
+(1)建立並推送 Feature 分支
+從 main 分支切出新的 feature 分支：
+git checkout -b feature/add-sftp-file-check main
+
+(2)進行開發並提交變更：
+git add .
+git commit -m "新增 SFTP 檔案存在性檢查功能"
+
+(3)將 feature 分支推送到遠端儲存庫：
+git push -u origin feature/add-sftp-file-check
+
+[二]
+建立 Pull Request（PR）
+(1)前往 GitHub 儲存庫頁面：
+​https://github.com/INFliveTW/Java-learn​
+
+(2)切換到剛剛推送的 feature 分支：​
+點選分支下拉選單，選擇 feature/add-sftp-file-check。​
+
+(3)點擊「Compare & pull request」按鈕：​
+GitHub 會自動偵測到新推送的分支，並提供建立 PR 的選項。​
+
+(4)填寫 PR 資訊：
+<1>標題：​例如「新增 SFTP 檔案存在性檢查功能」
+
+<2>描述：​說明此次變更的內容與目的，
+
+<3>例如「在 CSVToDataBaseServiceImpl 中新增檔案存在性檢查，
+解決檔案不存在時的錯誤處理」。​
+
+(5)確認合併目標分支為 main：​
+確保 PR 的 base 分支為 main，
+compare 分支為 feature/add-sftp-file-check。​
+
+(6)建立 PR：​點擊「Create pull request」按鈕，
+完成 PR 的建立。
+
+[三]
+使用 Pull Request 的優點
+
+<1>代碼審查：​團隊成員可以在合併前審查代碼，確保品質。
+
+<2>CI/CD 整合：​PR 可觸發自動化測試與部署流程，
+確保變更不會破壞現有功能。
+
+<3>版本控制清晰：​透過分支與 PR，
+讓版本歷史更為清晰，便於追蹤與回溯。​
+
+[四]
+注意事項
+
+<1>避免直接推送到 main 分支：​
+所有變更應透過 feature 分支與 PR 合併，避免直接影響生產環境。
+
+<2>定期更新 main 分支：​在開始新的開發前，
+確保 main 分支為最新狀態，避免合併衝突。
+
+<3>命名規範：​採用一致的分支命名規範，
+例如 feature/功能名稱，提高可讀性與管理性。

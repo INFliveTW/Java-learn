@@ -1,0 +1,31 @@
+ 建立 feature 分支
+[develop or main]
+git checkout -b feature/add-sftp-file-check  # 已建立完成
+輸入 Commit 訊息（如：新增 SFTP 錯誤處理邏輯）
+按「✅提交」 - 會提交到feature分支(不是main)
+
+推送到GitHub遠端 feature/add-sftp-file-check
+
+建立 Pull Request
+GitHub > 比較和拉取請求
+
+確保
+來源分支 feature/add-sftp-file-check
+目標分支 main ✅
+
+Merge pull request > 合併到 main
+
+
+原始檔控制
+輸入訊息 > 點擊提交
+
+
+
+PR頁面 合併到main，GitHub上按 Merge pull request
+
+上線前 正式版本
+git checkout main + git pull origin main
+
+刪除分支
+git branch -d feature/xxx
+git push origin --delete feature/xxx

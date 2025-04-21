@@ -1,0 +1,26 @@
+feature/add-sftp-file-check 分支
+
+1.將vscode程式碼推送到 feature 分支
+[切換至檔案]
+cd ~/Java-learn/2025年/4月/第四週/4月21日/datatransfer
+
+! 確保 main 是最新的
+git checkout main
+git pull origin main
+
+2. 建立 feature 分支
+git checkout -b feature/add-sftp-file-check
+
+git status    # 確認有變更的檔案
+
+3.
+git add .     # 將所有變更加入暫存
+git commit -m "新增 SFTP 檢查邏輯，處理檔案不存在時回傳錯誤"
+
+4.
+git push origin feature/add-sftp-file-check
+
+
+git checkout main
+# 或者若你用 develop 流程：
+# git checkout develop
