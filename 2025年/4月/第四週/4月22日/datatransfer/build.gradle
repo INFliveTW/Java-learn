@@ -35,8 +35,8 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
     implementation 'com.opencsv:opencsv:5.9'
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
     // 測試依賴
     //testImplementation 'org.powermock:powermock-api-mockito2:2.0.9'
     //testImplementation 'org.powermock:powermock-module-junit5:2.0.9'
@@ -47,8 +47,8 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
     // ✅ 新增這段支援 test 編譯
-    testCompileOnly 'org.projectlombok:lombok'
-    testAnnotationProcessor 'org.projectlombok:lombok'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
     // 新增 PowerMock 依賴
     //testImplementation 'org.powermock:powermock-api-mockito2:2.0.9'
     //testImplementation 'org.powermock:powermock-module-junit4:2.0.9'
